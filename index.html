@@ -39,7 +39,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
 /* 返回全部按钮 — 圆形，立基弘善下方 */
-.back-btn{z-index:58;right:clamp(12px,1.8%,20px);top:61%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(16px,2.8vw,22px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900}
+.back-btn{z-index:58;right:clamp(15px,2.2%,23px);top:61%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(16px,2.8vw,22px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900}
 .back-btn:hover{background:rgba(160,120,50,.6);border-color:rgba(220,180,90,.7);color:#ffe8a0;box-shadow:0 0 12px rgba(200,160,50,.5);transform:scale(1.1)}
 .back-btn.flash{background:rgba(220,180,60,.7);border-color:#ffd700;color:#fff;box-shadow:0 0 20px #ffd700;transform:scale(1.15)}
 
@@ -82,12 +82,12 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 
 /* 香烟 — 白色半透明微点CSS动画 */
 .smoke-area{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%;overflow:hidden}
-.smoke-dot{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:0;animation:smokeUp 8s ease-out infinite}
+.smoke-dot{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:0;animation:smokeUp 16s ease-out infinite}
 .smoke-dot:nth-child(3n+1){left:43%;animation-delay:0s}
-.smoke-dot:nth-child(3n+2){left:50%;animation-delay:2.6s}
-.smoke-dot:nth-child(3n+3){left:57%;animation-delay:5.2s}
-.smoke-dot:nth-child(6n+1){width:3px;height:3px;animation-duration:7s}
-.smoke-dot:nth-child(6n+4){width:5px;height:5px;animation-duration:9s}
+.smoke-dot:nth-child(3n+2){left:50%;animation-delay:5.2s}
+.smoke-dot:nth-child(3n+3){left:57%;animation-delay:10.4s}
+.smoke-dot:nth-child(6n+1){width:3px;height:3px;animation-duration:14s}
+.smoke-dot:nth-child(6n+4){width:5px;height:5px;animation-duration:18s}
 @keyframes smokeUp{
   0%{bottom:-5%;opacity:.5;transform:translateX(0) scale(1)}
   50%{opacity:.3;transform:translateX(calc(var(--drift,0)*4px)) scale(1.5)}
