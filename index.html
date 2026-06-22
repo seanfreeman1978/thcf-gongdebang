@@ -39,7 +39,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
 /* 功德芳名錄 图片按钮 — 呼吸金光 */
-.scroll-title{z-index:55;left:17%;top:25.5%;width:66%;height:clamp(38px,6vw,56px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
+.scroll-title{z-index:55;left:13%;top:23%;width:74%;height:clamp(76px,12vw,112px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
 .scroll-title img{width:auto;height:100%;object-fit:contain;pointer-events:none;animation:titleGold 3s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(200,160,50,.5))}
 .scroll-title:hover img{filter:drop-shadow(0 0 12px rgba(220,180,60,.8)) brightness(1.15);transform:scale(1.04)}
 .scroll-title.flash img{animation:none;filter:drop-shadow(0 0 24px #ffd700) brightness(1.4);transform:scale(1.08)}
@@ -333,57 +333,55 @@ let W,H;
 function rzCvs(){W=cvs.width=cvs.offsetWidth;H=cvs.height=cvs.offsetHeight}
 window.addEventListener('resize',rzCvs);
 
-// 三股香烟 → 汇聚细流 → 上升扩散 (清晰版)
+// 三柱香 → 半透明细流汇聚上升
 class SmokeP{
   constructor(){this.reset()}
   reset(){
     if(!W||!H) return;
     this.src=Math.floor(Math.random()*3);
     const sx=[.34,.50,.66][this.src];
-    this.x=sx*W+(Math.random()-.5)*10;
-    this.y=H*.96+Math.random()*5;
-    this.vy=-(Math.random()*.4+.35);
+    this.x=sx*W+(Math.random()-.5)*8;
+    this.y=H*.96+Math.random()*4;
+    this.vy=-(Math.random()*.3+.28);
     this.life=0;
-    this.maxLife=200+Math.random()*200;
-    this.r=12+Math.random()*22;
+    this.maxLife=200+Math.random()*160;
+    this.r=4+Math.random()*7;
     this.phase='rise';
-    this.alpha=.04;
+    this.alpha=.03;
   }
   update(){
     this.life++;
     const t=this.life/this.maxLife, cxW=.50*W;
     if(this.phase==='rise'){
       this.y+=this.vy;
-      this.vy-=.0002;
-      if(this.src!==1) this.x+=(cxW-this.x)*.015;
-      this.r=this.r*.99+1;
-      this.alpha=Math.min(.45,t*5);
-      if(Math.abs(this.x-cxW)<8&&this.y<H*.35){
-        this.phase='stream'; this.r=2+Math.random()*3;
+      if(this.src!==1) this.x+=(cxW-this.x)*.018;
+      this.r=this.r*.985+.2;
+      this.alpha=Math.min(.22,t*6);
+      if(Math.abs(this.x-cxW)<5&&this.y<H*.32){
+        this.phase='stream'; this.r=.8+Math.random()*1.2;
       }
     }else if(this.phase==='stream'){
-      this.vy=-.6;
+      this.vy=-.65;
       this.y+=this.vy;
-      this.x+=(Math.random()-.5)*.4;
-      this.r=1.5+Math.random()*2.5;
-      this.alpha=.55;
-      if(this.y<H*.04){this.phase='disperse'}
+      this.x+=(Math.random()-.5)*.3;
+      this.r=.6+Math.random()*1;
+      this.alpha=.28;
+      if(this.y<H*.02){this.phase='disperse'}
     }else if(this.phase==='disperse'){
       this.y+=this.vy;
-      this.vy+=.006;
-      this.x+=(Math.random()-.5)*3.5;
-      this.r+=.5;
-      this.alpha-=.01;
+      this.vy+=.004;
+      this.x+=(Math.random()-.5)*2.5;
+      this.r+=.25;
+      this.alpha-=.007;
     }
-    if(this.y<-20||this.alpha<.002) this.reset();
+    if(this.y<-12||this.alpha<.002) this.reset();
   }
   draw(){
     if(this.alpha<.003) return;
-    const r=this.r, g=cx.createRadialGradient(this.x,this.y,r*.02,this.x,this.y,r);
-    g.addColorStop(0,`rgba(235,220,195,${this.alpha})`);
-    g.addColorStop(.2,`rgba(210,185,155,${this.alpha*.6})`);
-    g.addColorStop(.5,`rgba(180,150,115,${this.alpha*.25})`);
-    g.addColorStop(1,'rgba(150,110,70,0)');
+    const r=this.r, g=cx.createRadialGradient(this.x,this.y,0,this.x,this.y,r);
+    g.addColorStop(0,`rgba(220,210,195,${this.alpha})`);
+    g.addColorStop(.35,`rgba(190,175,150,${this.alpha*.5})`);
+    g.addColorStop(1,'rgba(150,130,100,0)');
     cx.beginPath(); cx.arc(this.x,this.y,r,0,Math.PI*2);
     cx.fillStyle=g; cx.fill();
   }
@@ -393,7 +391,7 @@ let smokePts=[],smokeReady=false;
 function initSmoke(){
   rzCvs();
   if(W<10||H<10){requestAnimationFrame(initSmoke);return}
-  smokePts=Array.from({length:180},()=>new SmokeP());
+  smokePts=Array.from({length:150},()=>new SmokeP());
   smokeReady=true;
 }
 function animSmoke(){
