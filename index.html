@@ -39,7 +39,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
 /* 功德芳名錄 图片按钮 — 呼吸金光，响应式缩放 */
-.scroll-title{z-index:55;left:15%;top:21%;width:clamp(230px,63%,460px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
+.scroll-title{z-index:55;left:17.1%;top:21%;width:clamp(230px,63%,445px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
 .scroll-title img{width:auto;height:100%;object-fit:contain;pointer-events:none;animation:titleGold 3s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(200,160,50,.5))}
 .scroll-title:hover img{filter:drop-shadow(0 0 12px rgba(220,180,60,.8)) brightness(1.15);transform:scale(1.04)}
 .scroll-title.flash img{animation:none;filter:drop-shadow(0 0 24px #ffd700) brightness(1.4);transform:scale(1.08)}
@@ -82,34 +82,34 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .entry .marq.go{animation:marqR 8s linear infinite}
 @keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* 香烟效果 — CSS blur 叠加模拟 */
+/* 香烟效果 — 白色半透明 blur 叠加 */
 .smoke-area{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%;overflow:visible}
-/* 三柱香烟雾柱 */
+/* 三柱烟雾 */
 .smoke-col{position:absolute;bottom:5%;width:18%;height:60%;border-radius:40%;filter:blur(10px);opacity:0;animation:smokeRise 5s ease-out infinite}
-.smoke-col::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 90%,rgba(180,150,110,.35) 0%,rgba(150,120,80,.15) 40%,transparent 100%)}
+.smoke-col::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 90%,rgba(255,255,255,.45) 0%,rgba(255,255,250,.22) 35%,transparent 100%)}
 .smoke-l{left:12%;animation-delay:0s}
 .smoke-c{left:41%;animation-delay:1.7s}
 .smoke-r{left:70%;animation-delay:3.3s}
 @keyframes smokeRise{
-  0%{opacity:.6;transform:translateY(30%) scaleX(1.2) scaleY(.6)}
-  40%{opacity:.35;transform:translateY(-15%) scaleX(.9) scaleY(1.3)}
-  80%{opacity:.08;transform:translateY(-45%) scaleX(.6) scaleY(2)}
+  0%{opacity:.8;transform:translateY(30%) scaleX(1.2) scaleY(.6)}
+  40%{opacity:.5;transform:translateY(-15%) scaleX(.9) scaleY(1.3)}
+  80%{opacity:.15;transform:translateY(-45%) scaleX(.6) scaleY(2)}
   100%{opacity:0;transform:translateY(-65%) scaleX(.4) scaleY(2.5)}
 }
 /* 汇聚细流 */
 .smoke-stream{position:absolute;left:41%;width:18%;bottom:15%;height:75%;filter:blur(2px);opacity:0;animation:streamRise 4s ease-out infinite;animation-delay:1s}
-.smoke-stream::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to top,rgba(170,140,100,.25),rgba(160,130,90,.15) 60%,transparent 100%)}
+.smoke-stream::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to top,rgba(255,255,255,.35),rgba(255,255,252,.2) 60%,transparent 100%)}
 @keyframes streamRise{
-  0%{opacity:.5;transform:translateY(20%) scaleY(.8)}
-  50%{opacity:.3;transform:translateY(-30%) scaleY(1)}
+  0%{opacity:.6;transform:translateY(20%) scaleY(.8)}
+  50%{opacity:.4;transform:translateY(-30%) scaleY(1)}
   100%{opacity:0;transform:translateY(-70%) scaleY(1.2)}
 }
 /* 顶部扩散 */
 .smoke-disp{position:absolute;left:35%;top:0;width:30%;height:25%;filter:blur(14px);opacity:0;animation:dispFade 5s ease-out infinite;animation-delay:2.5s}
-.smoke-disp::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 100%,rgba(160,130,90,.18),transparent 80%)}
+.smoke-disp::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.25),transparent 80%)}
 @keyframes dispFade{
   0%{opacity:0;transform:scale(.3)}
-  40%{opacity:.25;transform:scale(1.6)}
+  40%{opacity:.35;transform:scale(1.6)}
   100%{opacity:0;transform:scale(3)}
 }
 
