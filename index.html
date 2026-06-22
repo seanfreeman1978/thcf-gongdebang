@@ -39,7 +39,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
 /* 返回全部按钮 — 圆形，立基弘善下方 */
-.back-btn{z-index:58;right:clamp(15px,2.2%,23px);top:61%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(22px,3.8vw,30px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900;padding-bottom:3px}
+.back-btn{z-index:58;right:clamp(15px,2.2%,23px);top:61%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(22px,3.8vw,30px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900;line-height:1}
 .back-btn:hover{background:rgba(160,120,50,.6);border-color:rgba(220,180,90,.7);color:#ffe8a0;box-shadow:0 0 12px rgba(200,160,50,.5);transform:scale(1.1)}
 .back-btn.flash{background:rgba(220,180,60,.7);border-color:#ffd700;color:#fff;box-shadow:0 0 20px #ffd700;transform:scale(1.15)}
 
@@ -153,7 +153,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   </div>
 
   <!-- 返回全部 -->
-  <div class="pos-abs back-btn" id="backBtn" onclick="backToAll()" title="返回全部">↺</div>
+  <div class="pos-abs back-btn" id="backBtn" onclick="backToAll()" title="返回全部"><span style="display:inline-block;transform:translateY(-1px)">↺</span></div>
 
   <!-- 香烟 -->
   <div class="pos-abs smoke-area" id="smokeArea">
