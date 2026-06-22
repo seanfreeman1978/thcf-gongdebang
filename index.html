@@ -36,7 +36,14 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .side-btn:hover{transform:scale(1.04)}
 .side-btn.active img{filter:brightness(1.25) drop-shadow(0 0 8px rgba(255,220,80,.6))}
 /* 呼吸光晕 — drop-shadow 精确贴合牌匾轮廓 */
-@keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 3px var(--gc,.888))}50%{filter:drop-shadow(0 0 7px var(--gc,.888))}}
+@keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
+
+/* 功德芳名錄 返回标题 */
+.scroll-title{z-index:55;left:20%;top:26.5%;width:62%;pointer-events:auto;text-align:center;cursor:pointer;user-select:none}
+.scroll-title span{display:inline-block;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;color:#c8a050;font-size:clamp(16px,2.6vw,22px);font-weight:900;letter-spacing:3px;transition:all .25s ease;text-shadow:0 0 8px rgba(200,160,80,.3)}
+.scroll-title:hover span{color:#e8c860;text-shadow:0 0 16px rgba(220,180,90,.5);transform:scale(1.06)}
+.scroll-title.flash span{animation:titleFlash .5s ease}
+@keyframes titleFlash{0%{color:#fff;text-shadow:0 0 20px #ffd700}50%{transform:scale(1.1)}100%{color:#c8a050;text-shadow:0 0 8px rgba(200,160,80,.3);transform:scale(1)}}
 
 /* 按钮位置 — 响应式百分比偏移，随场景宽度等比缩放 */
 .btn-l1{left:clamp(-12px,-0.83%,-3px);top:30%}
@@ -75,8 +82,8 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .entry .marq.go{animation:marqR 8s linear infinite}
 @keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* 香炉青烟 */
-.smoke-cvs{z-index:45;pointer-events:none;left:35%;top:49.35%;width:30%;height:15%}
+/* 香炉青烟 — 向上延伸给烟雾充分上升空间 */
+.smoke-cvs{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%}
 
 /* 复制账号 */
 .copy-btn{z-index:70;left:63.11%;top:80.05%;width:clamp(22px,4.2%,34px);aspect-ratio:1.25;height:auto;border-radius:6px;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(10px,1.6vw,14px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
@@ -127,6 +134,9 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
     <div class="mask-b"></div>
     <div class="scroll-track" id="scrollTrack"></div>
   </div>
+
+  <!-- 功德芳名錄 返回标题 -->
+  <div class="pos-abs scroll-title" id="scrollTitle" onclick="backToAll()"><span>༺ 功 德 芳 名 錄 ༻</span></div>
 
   <!-- 香炉青烟 -->
   <canvas class="pos-abs smoke-cvs" id="smokeCanvas"></canvas>
@@ -281,6 +291,13 @@ function switchCat(cat,el){
   renderList(cat);
 }
 
+function backToAll(){
+  const t=document.getElementById('scrollTitle');
+  t.classList.add('flash');
+  setTimeout(()=>t.classList.remove('flash'),500);
+  switchCat('全部',null);
+}
+
 document.getElementById('copyBtn').addEventListener('click',function(){
   const acc="212-1-96633-9";
   if(navigator.clipboard?.writeText){
@@ -316,42 +333,63 @@ let W,H;
 function rzCvs(){W=cvs.width=cvs.offsetWidth;H=cvs.height=cvs.offsetHeight}
 window.addEventListener('resize',rzCvs);
 
+// 三股香烟 → 汇聚细流 → 上升扩散
 class SmokeP{
   constructor(){this.reset()}
   reset(){
     if(!W||!H) return;
-    const sx=[.38,.50,.62][Math.floor(Math.random()*3)];
-    this.x=sx*W+(Math.random()-.5)*3;
-    this.y=H*.95+Math.random()*3;
-    this.vy=-(Math.random()*.26+.3);
+    this.src=Math.floor(Math.random()*3); // 左 中 右 三柱香
+    const sx=[.35,.50,.65][this.src];
+    this.x=sx*W+(Math.random()-.5)*8;
+    this.y=H*.96+Math.random()*4;
+    this.vy=-(Math.random()*.35+.28);
     this.life=0;
-    this.maxLife=133+Math.random()*133;
-    this.baseR=14+Math.random()*20;
-    this.active=true;
+    this.maxLife=220+Math.random()*180;
+    this.r=10+Math.random()*18;
+    this.phase='rise';
+    this.alpha=.02;
   }
   update(){
-    if(!this.active) return;
     this.life++;
     const t=this.life/this.maxLife;
-    this.vy-=.00015;
-    this.y+=this.vy;
-    const pull=(.50*W-this.x)*.0005;
-    this.x+=pull;
-    this.curR=this.baseR*(.15+t*2.8);
-    this.alpha=.25*Math.sin(t*Math.PI)*Math.exp(-t*.7);
-    if(this.y<-H*.05||this.alpha<.001) this.reset();
+    const cxW=.50*W; // 中心X
+
+    if(this.phase==='rise'){
+      this.y+=this.vy;
+      // 侧柱向中心汇聚，中柱直上
+      if(this.src!==1) this.x+=(cxW-this.x)*.012;
+      this.r*=.985;
+      this.alpha=Math.min(.35,t*4);
+      // 到达汇聚点（接近中心 + 高度约40%处）
+      if(Math.abs(this.x-cxW)<6&&this.y<H*.38){
+        this.phase='stream';
+        this.r=1.5+Math.random()*2;
+      }
+    }else if(this.phase==='stream'){
+      this.vy=-.55;
+      this.y+=this.vy;
+      this.x+=(Math.random()-.5)*.35; // 细微摇曳
+      this.r=1.2+Math.random()*1.6;
+      this.alpha=.5;
+      if(this.y<H*.06){this.phase='disperse'}
+    }else if(this.phase==='disperse'){
+      this.y+=this.vy;
+      this.vy+=.005;
+      this.x+=(Math.random()-.5)*3;
+      this.r+=.35;
+      this.alpha-=.008;
+    }
+    if(this.y<-15||this.alpha<.003) this.reset();
   }
   draw(){
-    if(!this.active||this.alpha<.003||this.curR<.3) return;
-    const r=this.curR;
-    const grad=cx.createRadialGradient(this.x,this.y,r*.02,this.x,this.y,r);
-    grad.addColorStop(0,`rgba(220,205,180,${this.alpha})`);
-    grad.addColorStop(.25,`rgba(200,180,155,${this.alpha*.55})`);
-    grad.addColorStop(1,'rgba(170,140,110,0)');
-    cx.beginPath();
-    cx.arc(this.x,this.y,r,0,Math.PI*2);
-    cx.fillStyle=grad;
-    cx.fill();
+    if(this.alpha<.004) return;
+    const r=this.r;
+    const g=cx.createRadialGradient(this.x,this.y,r*.01,this.x,this.y,r);
+    g.addColorStop(0,`rgba(230,215,190,${this.alpha})`);
+    g.addColorStop(.25,`rgba(205,185,155,${this.alpha*.55})`);
+    g.addColorStop(1,'rgba(160,130,100,0)');
+    cx.beginPath(); cx.arc(this.x,this.y,r,0,Math.PI*2);
+    cx.fillStyle=g; cx.fill();
   }
 }
 
@@ -359,7 +397,7 @@ let smokePts=[],smokeReady=false;
 function initSmoke(){
   rzCvs();
   if(W<10||H<10){requestAnimationFrame(initSmoke);return}
-  smokePts=Array.from({length:90},()=>new SmokeP());
+  smokePts=Array.from({length:140},()=>new SmokeP());
   smokeReady=true;
 }
 function animSmoke(){
