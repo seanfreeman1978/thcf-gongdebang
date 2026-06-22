@@ -87,7 +87,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .bottom-info{z-index:20;left:0;right:0;bottom:0;height:14%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:.8%;pointer-events:none}
 
 /* 善缘账户铜板 —— 精密贴合BG铜框 */
-.acct-panel{z-index:35;left:20.6%;top:75.2%;width:56.8%;pointer-events:none;text-align:center;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;word-break:normal;overflow-wrap:break-word;background:linear-gradient(180deg,rgba(100,65,25,.12) 0%,rgba(70,40,15,.07) 100%);border:1px solid rgba(150,105,35,.22);border-radius:clamp(3px,.8vw,6px);padding:clamp(2px,.6vw,7px) clamp(4px,1vw,10px);box-sizing:border-box}
+.acct-panel{z-index:35;left:50%;transform:translateX(-50%);top:75.2%;width:56.8%;pointer-events:none;text-align:center;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;word-break:normal;overflow-wrap:break-word;background:linear-gradient(180deg,rgba(100,65,25,.12) 0%,rgba(70,40,15,.07) 100%);border:1px solid rgba(150,105,35,.22);border-radius:clamp(3px,.8vw,6px);padding:clamp(2px,.6vw,7px) clamp(4px,1vw,10px);box-sizing:border-box}
 .acct-panel .acct-title{font-size:clamp(13px,2.8vw,20px);font-weight:900;color:#111;letter-spacing:clamp(1px,.4vw,3px);margin-bottom:1px;white-space:nowrap}
 .acct-panel .acct-body{font-size:clamp(10px,2.2vw,16px);color:#111;line-height:1.15;font-weight:700;white-space:normal;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','Noto Serif TC','Arial Narrow','Helvetica Narrow',sans-serif}
 .acct-panel .acct-body .en{font-family:'Arial Narrow','Helvetica Narrow',Arial,sans-serif;font-size:0.92em;letter-spacing:-0.2px}
@@ -289,6 +289,17 @@ function done(el){el.classList.add('ok');el.textContent='✓';setTimeout(()=>{el
 const bgm=document.getElementById('bgMusic'),ab=document.getElementById('audioBtn');
 bgm.volume=0.25;
 let audOn=true;
+// 手机浏览器拦截autoplay → 首次触摸时恢复
+bgm.play().catch(()=>{
+  audOn=false; ab.textContent='✕';
+  const resume=()=>{
+    bgm.play().then(()=>{audOn=true;ab.textContent='♪'}).catch(()=>{});
+    document.removeEventListener('click',resume);
+    document.removeEventListener('touchstart',resume);
+  };
+  document.addEventListener('click',resume,{once:true});
+  document.addEventListener('touchstart',resume,{once:true});
+});
 ab.addEventListener('click',()=>{
   if(audOn){bgm.pause();ab.textContent='✕'}else{bgm.play().catch(()=>{});ab.textContent='♪'}
   audOn=!audOn;
