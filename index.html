@@ -39,7 +39,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
 /* 功德芳名錄 图片按钮 — 呼吸金光，响应式缩放 */
-.scroll-title{z-index:55;left:20.6%;top:21%;width:clamp(230px,63%,420px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
+.scroll-title{z-index:55;left:19.2%;top:21.7%;width:clamp(230px,63%,400px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
 .scroll-title img{width:auto;height:100%;object-fit:contain;pointer-events:none;animation:titleGold 3s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(200,160,50,.5))}
 .scroll-title:hover img{filter:drop-shadow(0 0 12px rgba(220,180,60,.8)) brightness(1.15);transform:scale(1.04)}
 .scroll-title.flash img{animation:none;filter:drop-shadow(0 0 24px #ffd700) brightness(1.4);transform:scale(1.08)}
@@ -328,40 +328,40 @@ ab.addEventListener('click',()=>{
   audOn=!audOn;
 });
 
-// 简净白烟 — 微点飘升，自然缭绕
+// 白烟 — 高可见度微点飘升
 const scvs=document.getElementById('smokeCanvas'),sctx=scvs.getContext('2d');
 let sW,sH;
 function rzSmoke(){sW=scvs.width=scvs.offsetWidth;sH=scvs.height=scvs.offsetHeight}
 window.addEventListener('resize',rzSmoke);
 class SP{
   reset(){
-    const sx=[.34,.50,.66][Math.floor(Math.random()*3)];
-    this.x=sx*sW+(Math.random()-.5)*14;
-    this.y=sH*.95+Math.random()*3;
-    this.vx=(Math.random()-.5)*.25;
-    this.vy=-(Math.random()*.45+.18);
-    this.r=.4+Math.random()*2.2;
-    this.a=.04+Math.random()*.08;
-    this.life=0; this.max=140+Math.random()*200;
+    const sx=[.33,.50,.67][Math.floor(Math.random()*3)];
+    this.x=sx*sW+(Math.random()-.5)*16;
+    this.y=sH*.94+Math.random()*4;
+    this.vx=(Math.random()-.5)*.3;
+    this.vy=-(Math.random()*.5+.25);
+    this.r=1+Math.random()*5;
+    this.a=.12+Math.random()*.2;
+    this.life=0; this.max=120+Math.random()*180;
   }
   update(){
     this.life++; const t=this.life/this.max;
-    this.x+=this.vx+Math.sin(this.life*.015)*.12;
+    this.x+=this.vx+Math.sin(this.life*.02)*.15;
     this.y+=this.vy;
-    this.x+=(.5*sW-this.x)*.003;
-    if(t>.35) this.a-=.0004;
-    if(this.y<-8||this.a<.001) this.reset();
+    this.x+=(.5*sW-this.x)*.004;
+    if(t>.6) this.a-=.002;
+    if(this.y<-6||this.a<.004) this.reset();
   }
   draw(){
     sctx.beginPath(); sctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-    sctx.fillStyle=`rgba(255,255,250,${this.a})`; sctx.fill();
+    sctx.fillStyle=`rgba(240,235,220,${this.a})`; sctx.fill();
   }
 }
 let sps=[],smReady=false;
 function initSmoke(){
   rzSmoke();
   if(sW<8||sH<8){requestAnimationFrame(initSmoke);return}
-  sps=Array.from({length:300},()=>new SP());
+  sps=Array.from({length:400},()=>new SP());
   smReady=true;
 }
 function animSmoke(){
