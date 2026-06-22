@@ -262,7 +262,9 @@ function renderList(cat){
     });
   },200);
 
-  // 滚动控制
+  // 滚动控制 — 先清除残留inline样式
+  track.style.animation='';
+  track.style.padding='';
   if(needsScroll){
     const spd=Math.max(8,items.length*2.5);
     track.style.setProperty('--spd',spd+'s');
