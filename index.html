@@ -39,7 +39,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
 /* 返回全部按钮 — 圆形，立基弘善下方 */
-.back-btn{z-index:58;right:clamp(15px,2.2%,23px);top:61%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(16px,2.8vw,22px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900}
+.back-btn{z-index:58;right:clamp(15px,2.2%,23px);top:61%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(22px,3.8vw,30px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900}
 .back-btn:hover{background:rgba(160,120,50,.6);border-color:rgba(220,180,90,.7);color:#ffe8a0;box-shadow:0 0 12px rgba(200,160,50,.5);transform:scale(1.1)}
 .back-btn.flash{background:rgba(220,180,60,.7);border-color:#ffd700;color:#fff;box-shadow:0 0 20px #ffd700;transform:scale(1.15)}
 
@@ -80,19 +80,26 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .entry .marq.go{animation:marqR 8s linear infinite}
 @keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* 香烟 — 白色半透明微点CSS动画 */
+/* 香烟 — 流动雾化线条 */
 .smoke-area{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%;overflow:hidden}
-.smoke-dot{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:0;animation:smokeUp 16s ease-out infinite}
-.smoke-dot:nth-child(3n+1){left:43%;animation-delay:0s}
-.smoke-dot:nth-child(3n+2){left:50%;animation-delay:5.2s}
-.smoke-dot:nth-child(3n+3){left:57%;animation-delay:10.4s}
-.smoke-dot:nth-child(6n+1){width:3px;height:3px;animation-duration:14s}
-.smoke-dot:nth-child(6n+4){width:5px;height:5px;animation-duration:18s}
-@keyframes smokeUp{
-  0%{bottom:-5%;opacity:.5;transform:translateX(0) scale(1)}
-  50%{opacity:.3;transform:translateX(calc(var(--drift,0)*4px)) scale(1.5)}
-  90%{opacity:.05;transform:translateX(calc(var(--drift,0)*7px)) scale(2)}
-  100%{bottom:95%;opacity:0;transform:translateX(calc(var(--drift,0)*10px)) scale(2.5)}
+.smoke-wisp{position:absolute;bottom:-8%;width:clamp(6px,1.2vw,12px);height:40%;border-radius:40% 40% 20% 20%;filter:blur(9px);opacity:0;background:radial-gradient(ellipse at 50% 100%,rgba(255,255,250,.4),rgba(255,255,245,.15) 60%,transparent 100%);animation:wispUp 15s ease-in-out infinite}
+.smoke-wisp:nth-child(5n+1){left:41%}
+.smoke-wisp:nth-child(5n+2){left:49%}
+.smoke-wisp:nth-child(5n+3){left:57%}
+.smoke-wisp:nth-child(5n+4){left:45%;animation-duration:18s}
+.smoke-wisp:nth-child(5n+5){left:53%;animation-duration:13s}
+@keyframes wispUp{
+  0%{bottom:-8%;opacity:.35;transform:translateX(0) scaleY(.3)}
+  30%{opacity:.25;transform:translateX(calc(var(--sw,0)*4px)) scaleY(1)}
+  70%{opacity:.1;transform:translateX(calc(var(--sw,0)*8px)) scaleY(2.5)}
+  100%{bottom:95%;opacity:0;transform:translateX(calc(var(--sw,0)*12px)) scaleY(4)}
+}
+/* 上升细流 */
+.smoke-stream{position:absolute;left:48%;width:clamp(2px,.3vw,4px);bottom:10%;height:70%;filter:blur(1.5px);opacity:0;background:linear-gradient(to top,rgba(255,255,252,.25),rgba(255,255,250,.1) 60%,transparent);animation:streamUp 14s ease-in-out infinite;animation-delay:7s}
+@keyframes streamUp{
+  0%{bottom:10%;opacity:.3;transform:translateX(0)}
+  50%{opacity:.15;transform:translateX(calc(var(--sw,0)*3px))}
+  100%{bottom:85%;opacity:0;transform:translateX(calc(var(--sw,0)*6px))}
 }
 
 /* 复制账号 */
@@ -148,8 +155,10 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   <!-- 返回全部 -->
   <div class="pos-abs back-btn" id="backBtn" onclick="backToAll()" title="返回全部">↺</div>
 
-  <!-- 香炉白烟 -->
-  <div class="pos-abs smoke-area" id="smokeArea"></div>
+  <!-- 香烟 -->
+  <div class="pos-abs smoke-area" id="smokeArea">
+    <div class="smoke-stream" style="--sw:0"></div>
+  </div>
 
   <!-- 复制按钮 -->
   <div class="pos-abs copy-btn" id="copyBtn" title="複製銀行帳號">⧉</div>
@@ -338,18 +347,15 @@ ab.addEventListener('click',()=>{
   audOn=!audOn;
 });
 
-// 白烟 — CSS动画微点
+// 流动烟雾 — 宽幅雾化wisp
 (function(){
   const sa=document.getElementById('smokeArea');
   if(!sa) return;
-  for(let i=0;i<60;i++){
+  for(let i=0;i<15;i++){
     const d=document.createElement('div');
-    d.className='smoke-dot';
-    d.style.setProperty('--drift',(Math.random()-.5).toFixed(2));
-    d.style.animationDelay=(Math.random()*4).toFixed(1)+'s';
-    d.style.animationDuration=(3+Math.random()*3).toFixed(1)+'s';
-    d.style.width=(2+Math.random()*4)+'px';
-    d.style.height=d.style.width;
+    d.className='smoke-wisp';
+    d.style.setProperty('--sw',(Math.random()-.5).toFixed(2));
+    d.style.animationDelay=(Math.random()*15).toFixed(1)+'s';
     sa.appendChild(d);
   }
 })();
