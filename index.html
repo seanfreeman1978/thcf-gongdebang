@@ -197,8 +197,25 @@ function renderList(cat){
   }
   const items=data.filter(d=>cat==="全部"?true:getCat(d.project)===cat);
   items.sort((a,b)=>a.date.localeCompare(b.date));
-  // 条目少时三倍复制，确保两个副本在可视区内永不重叠
-  const dbl=items.length<=2?[...items,{_sep:1},...items,{_sep:1},...items]:[...items,...items];
+
+  // 估算条目总高度，判断是否需要滚动
+  const sa=document.getElementById('scrollArea');
+  const saH=sa.clientHeight;
+  const estEntryH=60; // 每条目约60px(含padding)
+  const estTitleH=cat!=="全部"?44:0;
+  const estTotal=estTitleH+items.length*estEntryH;
+  const needsScroll=estTotal>saH||cat==="全部";
+
+  // 构建渲染列表：要滚则双倍/三倍复制，不滚就原样
+  let renderList;
+  if(needsScroll){
+    renderList=items.length<=2
+      ?[...items,{_sep:1},...items,{_sep:1},...items]
+      :[...items,...items];
+  }else{
+    renderList=[...items];
+  }
+
   track.innerHTML='';
 
   if(cat!=="全部"){
@@ -212,7 +229,7 @@ function renderList(cat){
     mask.style.height='13%';
   }
 
-  dbl.forEach(d=>{
+  renderList.forEach(d=>{
     if(d._sep){ const se=document.createElement('div'); se.className='entry'; se.style.border='none'; se.innerHTML='<div style="height:clamp(12px,2.5vw,20px)"></div>'; track.appendChild(se); return }
     const e=document.createElement('div');
     e.className='entry';
@@ -220,7 +237,6 @@ function renderList(cat){
     const tyCls=d.type==="物資"?"tyWz":"tySk";
     const catC=CAT_COLORS[d.category]||'#555';
     const nm=d.name, pn=fmtProject(d.project||'');
-    // 项目名首段着色，其余深灰
     const dot=pn.indexOf('·');
     const pnFirst=dot>0?pn.substring(0,dot):pn;
     const pnRest=dot>0?pn.substring(dot):'';
@@ -246,25 +262,13 @@ function renderList(cat){
     });
   },200);
 
-  // 智能滚动: 条目可全部显示时不滚动，超出才滚
-  // 先清除上次可能残留的inline样式
-  track.style.animation='';
-  track.style.padding='';
-
-  const sa=document.getElementById('scrollArea');
-  const saH=sa.clientHeight;
-  const allEntries=[...track.querySelectorAll('.entry')];
-  const mult=items.length<=2?3:2;
-  const setSize=Math.ceil(allEntries.length/mult);
-  let firstSetH=0;
-  for(let i=0;i<setSize;i++) firstSetH+=allEntries[i]?.offsetHeight||0;
-
-  if(firstSetH<saH&&cat!=="全部"){
-    track.style.animation='none';
-    track.style.padding='0';
-  }else{
+  // 滚动控制
+  if(needsScroll){
     const spd=Math.max(8,items.length*2.5);
     track.style.setProperty('--spd',spd+'s');
+  }else{
+    track.style.animation='none';
+    track.style.padding='0';
   }
 }
 
