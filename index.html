@@ -76,8 +76,8 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 /* 底部信息 */
 .bottom-info{z-index:20;left:0;right:0;bottom:0;height:14%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:.8%;pointer-events:none}
 
-/* 善缘账户铜板 —— 精密贴合BG铜框 (19.5%~80.5%, top 74.8%) */
-.acct-panel{z-index:35;left:19.5%;top:74.8%;width:61%;pointer-events:none;text-align:center;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;word-break:normal;overflow-wrap:break-word;background:linear-gradient(180deg,rgba(100,65,25,.12) 0%,rgba(70,40,15,.07) 100%);border:1px solid rgba(150,105,35,.22);border-radius:clamp(3px,.8vw,6px);padding:clamp(2px,.6vw,7px) clamp(4px,1vw,10px);box-sizing:border-box}
+/* 善缘账户铜板 —— 精密贴合BG铜框 */
+.acct-panel{z-index:35;left:19.5%;top:75.2%;width:56.8%;pointer-events:none;text-align:center;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;word-break:normal;overflow-wrap:break-word;background:linear-gradient(180deg,rgba(100,65,25,.12) 0%,rgba(70,40,15,.07) 100%);border:1px solid rgba(150,105,35,.22);border-radius:clamp(3px,.8vw,6px);padding:clamp(2px,.6vw,7px) clamp(4px,1vw,10px);box-sizing:border-box}
 .acct-panel .acct-title{font-size:clamp(13px,2.8vw,20px);font-weight:900;color:#111;letter-spacing:clamp(1px,.4vw,3px);margin-bottom:1px;white-space:nowrap}
 .acct-panel .acct-body{font-size:clamp(10px,2.2vw,16px);color:#111;line-height:1.15;font-weight:700;white-space:normal}
 .acct-panel .acct-body b{color:#000;font-weight:900}
@@ -186,7 +186,8 @@ function renderList(cat){
   }
   const items=data.filter(d=>cat==="全部"?true:getCat(d.project)===cat);
   items.sort((a,b)=>a.date.localeCompare(b.date));
-  const dbl=[...items,...items];
+  // 条目少时三倍复制，确保两个副本在可视区内永不重叠
+  const dbl=items.length<=2?[...items,{_sep:1},...items,{_sep:1},...items]:[...items,...items];
   track.innerHTML='';
 
   if(cat!=="全部"){
@@ -201,6 +202,7 @@ function renderList(cat){
   }
 
   dbl.forEach(d=>{
+    if(d._sep){ const se=document.createElement('div'); se.className='entry'; se.style.border='none'; se.innerHTML='<div style="height:clamp(12px,2.5vw,20px)"></div>'; track.appendChild(se); return }
     const e=document.createElement('div');
     e.className='entry';
     const hi=d.amount>=100000;
