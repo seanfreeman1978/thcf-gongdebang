@@ -1,0 +1,11 @@
+{
+  "name": "thcf-gongdebang",
+  "version": "1.0.0",
+  "description": "泰國華夏善堂 · 功德芳名錄 H5 募捐系統",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["charity", "donation", "buddhist", "thai-chinese"],
+  "license": "UNLICENSED"
+}

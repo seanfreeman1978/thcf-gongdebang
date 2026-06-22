@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="icon" type="image/png" href="assets/logo-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<title>泰國華夏善堂 · 功德芳名錄</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{background:#1a1208}
+body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+.page{width:100%;min-height:100vh;background:#1a1208;display:flex;flex-direction:column;align-items:center}
+.scene{position:relative;width:100%;max-width:720px;flex-shrink:0}
+.scene>img.bg{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.pos-abs{position:absolute}
+
+/* 音频 */
+.audio-btn{z-index:80;right:1.5%;top:.8%;width:clamp(44px,8.4%,68px);aspect-ratio:1.25;height:auto;border-radius:8px;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(18px,2.8vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
+.audio-btn:hover{background:rgba(180,140,60,.5);border-color:rgba(220,190,100,.7)}
+
+/* 侧边按钮 */
+.side-btn{z-index:60;width:clamp(52px,18.6%,134px);height:clamp(68px,8.87%,180px);border-radius:0;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,filter .3s}
+.side-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;border-radius:0;animation:plaqueGlow 2.4s ease-in-out infinite}
+.side-btn:hover{transform:scale(1.04)}
+.side-btn.active img{filter:brightness(1.25) drop-shadow(0 0 8px rgba(255,220,80,.6))}
+/* 呼吸光晕 — drop-shadow 精确贴合牌匾轮廓 */
+@keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 3px var(--gc,.888))}50%{filter:drop-shadow(0 0 7px var(--gc,.888))}}
+
+/* 按钮位置 — 响应式百分比偏移，随场景宽度等比缩放 */
+.btn-l1{left:clamp(-12px,-0.83%,-3px);top:30%}
+.btn-l2{left:clamp(-12px,-0.83%,-3px);top:40.82%}
+.btn-l3{left:clamp(-12px,-0.83%,-3px);top:51.64%}
+.btn-r1{right:clamp(-18px,-1.39%,-5px);top:30%}
+.btn-r2{right:clamp(-18px,-1.39%,-5px);top:40.82%}
+.btn-r3{right:clamp(-18px,-1.39%,-5px);top:51.64%}
+
+/* 碑身滚动区 */
+.scroll-area{z-index:30;overflow:hidden;left:20%;top:28.89%;width:62%;height:32.20%}
+.mask-t{position:absolute;top:0;left:0;right:0;z-index:40;background:transparent;pointer-events:none;transition:height .4s ease}
+.mask-b{position:absolute;bottom:0;left:0;right:0;height:11%;min-height:24px;max-height:50px;z-index:40;background:transparent;pointer-events:none}
+
+/* 滚动文字 */
+.scroll-track{display:flex;flex-direction:column;animation:scrollUp var(--spd,30s) linear infinite;padding:16% 0 16% 0}
+@keyframes scrollUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+.entry{padding:10px 8px;border-bottom:1px solid rgba(140,100,40,.22);line-height:1.5;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;overflow:hidden}
+.entry-row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.entry-left{flex:1;min-width:0;overflow:hidden;display:flex;align-items:baseline;gap:4px}
+.entry-right{flex-shrink:0;text-align:right}
+.entry .name{font-size:clamp(14px,2.8vw,18px);font-weight:700;color:#1a1a1a;max-width:55%;flex-shrink:1;min-width:0;overflow:hidden;white-space:nowrap}
+.entry .title{font-size:13px;color:#666;font-weight:400;flex:0 1 auto;min-width:0;max-width:clamp(48px,8vw,80px);overflow:hidden;white-space:nowrap}
+.entry .amount{font-size:clamp(14px,2.8vw,18px);color:#8B4513;display:inline;white-space:nowrap}
+.entry .amount .hl{font-weight:900}
+.entry .amount i{font-style:normal;font-weight:400}
+.entry .amount .wz-label{font-size:13px;color:#1a5632;font-weight:400;margin-right:2px}
+.entry .proj{font-size:clamp(12px,2vw,13px);margin-top:2px;display:flex;align-items:baseline;gap:1px;overflow:hidden;line-height:1.4}
+.entry .proj .pre{color:#c0392b;flex-shrink:0}
+.entry .proj .tySk{color:#3366cc;flex-shrink:0}
+.entry .proj .tyWz{color:#1a5632;flex-shrink:0}
+.entry .proj .pn{flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap}
+.entry .proj .date{color:#555;flex-shrink:0;margin-left:auto;padding-left:4px}
+/* 跑馬燈 */
+.entry .marq{display:inline-block;white-space:nowrap;will-change:transform}
+.entry .marq.go{animation:marqR 8s linear infinite}
+@keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* 香炉青烟 */
+.smoke-cvs{z-index:45;pointer-events:none;left:35%;top:49.35%;width:30%;height:15%}
+
+/* 复制账号 */
+.copy-btn{z-index:70;left:63.11%;top:80.05%;width:clamp(22px,4.2%,34px);aspect-ratio:1.25;height:auto;border-radius:6px;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(10px,1.6vw,14px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
+.copy-btn:hover{background:rgba(180,140,60,.5);border-color:rgba(220,190,100,.7)}
+.copy-btn.ok{background:rgba(80,160,80,.4);border-color:rgba(100,180,100,.55)}
+
+/* 底部信息 */
+.bottom-info{z-index:20;left:0;right:0;bottom:0;height:14%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:.8%;pointer-events:none}
+
+/* 善缘账户铜板 —— 精密贴合BG铜框 (19.5%~80.5%, top 74.8%) */
+.acct-panel{z-index:35;left:19.5%;top:74.8%;width:61%;pointer-events:none;text-align:center;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;word-break:normal;overflow-wrap:break-word;background:linear-gradient(180deg,rgba(100,65,25,.12) 0%,rgba(70,40,15,.07) 100%);border:1px solid rgba(150,105,35,.22);border-radius:clamp(3px,.8vw,6px);padding:clamp(2px,.6vw,7px) clamp(4px,1vw,10px);box-sizing:border-box}
+.acct-panel .acct-title{font-size:clamp(13px,2.8vw,20px);font-weight:900;color:#111;letter-spacing:clamp(1px,.4vw,3px);margin-bottom:1px;white-space:nowrap}
+.acct-panel .acct-body{font-size:clamp(10px,2.2vw,16px);color:#111;line-height:1.15;font-weight:700;white-space:normal}
+.acct-panel .acct-body b{color:#000;font-weight:900}
+</style>
+</head>
+<body>
+
+<div class="page">
+<div class="scene" id="scene">
+
+  <img class="bg" src="assets/bg.jpg" alt="">
+
+  <!-- 音频 -->
+  <div class="pos-abs audio-btn" id="audioBtn" title="音樂開關">♪</div>
+  <audio id="bgMusic" loop autoplay preload="auto"><source src="assets/bg-music.mp3" type="audio/mpeg"></audio>
+
+  <!-- 左侧按钮：急難救助(红)、敬老撫孤(绿)、宗親文化(紫) -->
+  <div class="pos-abs side-btn btn-l1" style="--gc:rgba(200,40,40,.45)" onclick="switchCat('急難救助',this)">
+    <img src="assets/btn-emergency.png" alt="急難救助"></div>
+  <div class="pos-abs side-btn btn-l2" style="--gc:rgba(40,160,70,.45)" onclick="switchCat('敬老撫孤',this)">
+    <img src="assets/btn-elderly.png" alt="敬老撫孤"></div>
+  <div class="pos-abs side-btn btn-l3" style="--gc:rgba(140,60,190,.45)" onclick="switchCat('宗親文化',this)">
+    <img src="assets/btn-clan.png" alt="宗親文化"></div>
+
+  <!-- 右侧按钮：傳醫康養(橙)、助學興教(粉)、立基弘善(蓝) -->
+  <div class="pos-abs side-btn btn-r1" style="--gc:rgba(210,110,30,.45)" onclick="switchCat('傳醫康養',this)">
+    <img src="assets/btn-medical.png" alt="傳醫康養"></div>
+  <div class="pos-abs side-btn btn-r2" style="--gc:rgba(210,75,130,.45)" onclick="switchCat('助學興教',this)">
+    <img src="assets/btn-education.png" alt="助學興教"></div>
+  <div class="pos-abs side-btn btn-r3" style="--gc:rgba(50,100,210,.45)" onclick="switchCat('立基弘善',this)">
+    <img src="assets/btn-construction.png" alt="立基弘善"></div>
+
+  <!-- 碑身滚动区 -->
+  <div class="pos-abs scroll-area" id="scrollArea">
+    <div class="mask-t" id="maskTop"></div>
+    <div class="mask-b"></div>
+    <div class="scroll-track" id="scrollTrack"></div>
+  </div>
+
+  <!-- 香炉青烟 -->
+  <canvas class="pos-abs smoke-cvs" id="smokeCanvas"></canvas>
+
+  <!-- 复制按钮 -->
+  <div class="pos-abs copy-btn" id="copyBtn" title="複製銀行帳號">⧉</div>
+
+  <!-- 善缘账户 -->
+  <div class="pos-abs acct-panel">
+    <div class="acct-title">善 緣 帳 戶</div>
+    <div class="acct-body">
+      <b>開泰銀行</b> ธนาคารกสิกรไทย Kasikorn<br>
+      戶名：<b>มูลนิธิหัวเซียะประเทศไทย</b><br>
+      (Thailand Huaxia Charitable Foundation)<br>
+      帳號：<b>212-1-96633-9</b>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <div class="pos-abs bottom-info" id="bottomInfo"></div>
+
+</div>
+</div>
+
+<script>
+const STORAGE_KEY='gongdebang_donations';
+function loadData(){try{const d=JSON.parse(localStorage.getItem(STORAGE_KEY));return Array.isArray(d)?d:[]}catch(e){return[]}}
+
+// 默认数据（仅首次无数据时种子到localStorage）
+const SEED=[
+  {_id:1,name:"陳氏宗親總會",title:"理事長",amount:128000,type:"善款",project:"立基弘善/奠基典禮",category:"立基弘善",date:"2024-03-15"},
+  {_id:2,name:"李　明輝",title:"居士",amount:88000,type:"善款",project:"急難救助",category:"急難救助",date:"2024-05-20"},
+  {_id:3,name:"黃淑芬",title:"夫人",amount:66000,type:"善款",project:"助學興教/獎學金計劃",category:"助學興教",date:"2024-06-10"},
+  {_id:4,name:"釋妙善法師",title:"住持",amount:52000,type:"物資",project:"傳醫康養/義診活動",category:"傳醫康養",date:"2024-07-01"},
+  {_id:5,name:"吳振興",title:"董事",amount:45000,type:"善款",project:"敬老撫孤/重陽慰問",category:"敬老撫孤",date:"2024-08-12"},
+  {_id:6,name:"林美珠",title:"居士",amount:38000,type:"善款",project:"宗親文化/祭祖大典",category:"宗親文化",date:"2024-09-05"},
+  {_id:7,name:"鄭國樑",title:"博士",amount:32000,type:"物資",project:"立基弘善/專項活動",category:"立基弘善",date:"2024-10-18"},
+  {_id:8,name:"許雪華",title:"女士",amount:28000,type:"善款",project:"急難救助/災後重建",category:"急難救助",date:"2024-11-22"},
+  {_id:9,name:"陳榮茂",title:"居士",amount:22000,type:"善款",project:"助學興教/文具捐贈",category:"助學興教",date:"2024-12-01"},
+  {_id:10,name:"詹培宏",title:"教授",amount:18000,type:"物資",project:"傳醫康養/醫療設備",category:"傳醫康養",date:"2025-01-15"},
+  {_id:11,name:"謝黃麗卿",title:"居士",amount:15000,type:"善款",project:"敬老撫孤/日常關懷",category:"敬老撫孤",date:"2025-02-20"},
+  {_id:12,name:"蕭萬長",title:"長者",amount:12000,type:"善款",project:"宗親文化/族譜編修",category:"宗親文化",date:"2025-03-08"},
+  {_id:13,name:"柯文哲",title:"大德",amount:9800,type:"善款",project:"立基弘善/就職典禮",category:"立基弘善",date:"2025-04-10"},
+  {_id:14,name:"周美青",title:"居士",amount:6800,type:"物資",project:"急難救助/冬令救濟",category:"急難救助",date:"2025-05-12"},
+  {_id:15,name:"蔡英文",title:"信徒",amount:5200,type:"善款",project:"助學興教/偏鄉教育",category:"助學興教",date:"2025-06-01"},
+  {_id:16,name:"馬英九",title:"大德",amount:3800,type:"物資",project:"傳醫康養/健康檢查",category:"傳醫康養",date:"2025-07-15"},
+  {_id:17,name:"賴清德",title:"居士",amount:2800,type:"善款",project:"敬老撫孤/節日禮包",category:"敬老撫孤",date:"2025-08-20"},
+  {_id:18,name:"侯友宜",title:"善信",amount:1800,type:"善款",project:"宗親文化/青年座談",category:"宗親文化",date:"2025-09-10"},
+  {_id:19,name:"韓國瑜",title:"大德",amount:1280,type:"物資",project:"立基弘善/設備採購",category:"立基弘善",date:"2025-10-05"},
+  {_id:20,name:"張善政",title:"居士",amount:880,type:"善款",project:"急難救助",category:"急難救助",date:"2025-11-11"},
+];
+
+const CATS=["急難救助","敬老撫孤","宗親文化","傳醫康養","助學興教","立基弘善"];
+const CAT_COLORS={'急難救助':'#c82828','敬老撫孤':'#28a046','宗親文化':'#8c3cbe','傳醫康養':'#d26e1e','助學興教':'#d24b82','立基弘善':'#3264d2'};
+let curCat="全部";
+
+function fmtProject(proj){return proj.replace(/\//g,'·')}
+function getCat(proj){const p1=proj.substring(0,1);for(const c of CATS)if(c.substring(0,1)===p1)return c;return proj}
+
+function renderList(cat){
+  const track=document.getElementById('scrollTrack');
+  const mask=document.getElementById('maskTop');
+  let data=loadData();
+  // 首次加载时种子数据
+  if(data.length===0){
+    data=SEED;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(SEED));
+  }
+  const items=data.filter(d=>cat==="全部"?true:getCat(d.project)===cat);
+  items.sort((a,b)=>a.date.localeCompare(b.date));
+  const dbl=[...items,...items];
+  track.innerHTML='';
+
+  if(cat!=="全部"){
+    const h=document.createElement('div');
+    h.className='entry';
+    const cc=CAT_COLORS[cat]||'#333';
+    h.innerHTML=`<div style="text-align:center;font-size:clamp(26px,4.6vw,34px);color:${cc};font-weight:900;padding:3px 0">${cat}</div>`;
+    track.appendChild(h);
+    mask.style.height='18%';
+  }else{
+    mask.style.height='13%';
+  }
+
+  dbl.forEach(d=>{
+    const e=document.createElement('div');
+    e.className='entry';
+    const hi=d.amount>=100000;
+    const tyCls=d.type==="物資"?"tyWz":"tySk";
+    const catC=CAT_COLORS[d.category]||'#555';
+    const nm=d.name, pn=fmtProject(d.project||'');
+    // 项目名首段着色，其余深灰
+    const dot=pn.indexOf('·');
+    const pnFirst=dot>0?pn.substring(0,dot):pn;
+    const pnRest=dot>0?pn.substring(dot):'';
+    e.innerHTML=`
+      <div class="entry-row">
+        <div class="entry-left"><span class="name"><span class="marq">${nm}</span></span>${d.title?`<span class="title"><span class="marq">${d.title}</span></span>`:''}</div>
+        <div class="entry-right"><span class="amount">${d.type==="物資"?`<span class="wz-label">物資價值</span>`:''}<span${hi?' class="hl"':''}>${d.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span> <i>銖</i></span></div>
+      </div>
+      <div class="proj"><span class="pre">樂捐·</span><span class="${tyCls}">${d.type||'善款'}·</span><span class="pn"><span class="marq"><span style="color:${catC}">${pnFirst}</span><span style="color:#555">${pnRest}</span></span></span><span class="date">${d.date}</span></div>`;
+    track.appendChild(e);
+  });
+
+  // 激活跑馬燈
+  setTimeout(()=>{
+    track.querySelectorAll('.marq').forEach(s=>{
+      const pw=s.parentElement;
+      if(!pw) return;
+      if(s.scrollWidth>pw.clientWidth+3){
+        const h=s.innerHTML;
+        s.classList.add('go');
+        s.innerHTML=h+'&emsp;&emsp;'+h;
+      }
+    });
+  },200);
+
+  const spd=Math.max(8,items.length*2.5);
+  track.style.setProperty('--spd',spd+'s');
+}
+
+function switchCat(cat,el){
+  curCat=cat;
+  document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderList(cat);
+}
+
+document.getElementById('copyBtn').addEventListener('click',function(){
+  const acc="212-1-96633-9";
+  if(navigator.clipboard?.writeText){
+    navigator.clipboard.writeText(acc).then(()=>done(this));
+  }else{
+    const t=document.createElement('textarea');t.value=acc;document.body.appendChild(t);
+    t.select();document.execCommand('copy');document.body.removeChild(t);done(this);
+  }
+});
+function done(el){el.classList.add('ok');el.textContent='✓';setTimeout(()=>{el.classList.remove('ok');el.textContent='⧉'},1200)}
+
+const bgm=document.getElementById('bgMusic'),ab=document.getElementById('audioBtn');
+bgm.volume=0.25;
+let audOn=true;
+ab.addEventListener('click',()=>{
+  if(audOn){bgm.pause();ab.textContent='✕'}else{bgm.play().catch(()=>{});ab.textContent='♪'}
+  audOn=!audOn;
+});
+
+const cvs=document.getElementById('smokeCanvas'),cx=cvs.getContext('2d');
+let W,H;
+function rzCvs(){W=cvs.width=cvs.offsetWidth;H=cvs.height=cvs.offsetHeight}
+window.addEventListener('resize',rzCvs);
+
+class SmokeP{
+  constructor(){this.reset()}
+  reset(){
+    if(!W||!H) return;
+    const sx=[.38,.50,.62][Math.floor(Math.random()*3)];
+    this.x=sx*W+(Math.random()-.5)*3;
+    this.y=H*.95+Math.random()*3;
+    this.vy=-(Math.random()*.26+.3);
+    this.life=0;
+    this.maxLife=133+Math.random()*133;
+    this.baseR=14+Math.random()*20;
+    this.active=true;
+  }
+  update(){
+    if(!this.active) return;
+    this.life++;
+    const t=this.life/this.maxLife;
+    this.vy-=.00015;
+    this.y+=this.vy;
+    const pull=(.50*W-this.x)*.0005;
+    this.x+=pull;
+    this.curR=this.baseR*(.15+t*2.8);
+    this.alpha=.25*Math.sin(t*Math.PI)*Math.exp(-t*.7);
+    if(this.y<-H*.05||this.alpha<.001) this.reset();
+  }
+  draw(){
+    if(!this.active||this.alpha<.003||this.curR<.3) return;
+    const r=this.curR;
+    const grad=cx.createRadialGradient(this.x,this.y,r*.02,this.x,this.y,r);
+    grad.addColorStop(0,`rgba(220,205,180,${this.alpha})`);
+    grad.addColorStop(.25,`rgba(200,180,155,${this.alpha*.55})`);
+    grad.addColorStop(1,'rgba(170,140,110,0)');
+    cx.beginPath();
+    cx.arc(this.x,this.y,r,0,Math.PI*2);
+    cx.fillStyle=grad;
+    cx.fill();
+  }
+}
+
+let smokePts=[],smokeReady=false;
+function initSmoke(){
+  rzCvs();
+  if(W<10||H<10){requestAnimationFrame(initSmoke);return}
+  smokePts=Array.from({length:90},()=>new SmokeP());
+  smokeReady=true;
+}
+function animSmoke(){
+  if(!smokeReady){requestAnimationFrame(animSmoke);return}
+  cx.clearRect(0,0,W,H);
+  smokePts.forEach(p=>{p.update();p.draw()});
+  requestAnimationFrame(animSmoke);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  renderList("全部");
+  initSmoke();animSmoke();
+});
+</script>
+</body>
+</html>

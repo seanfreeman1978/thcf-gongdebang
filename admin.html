@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" type="image/png" href="assets/logo-icon.png">
+<title>功德榜管理後台 - 泰國華夏善堂</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'KaiTi','DFKai-SB','Noto Serif TC',serif;background:#f5f0e8;color:#3a3028;min-height:100vh}
+
+/* ===== 登录 ===== */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#e8dcc8 0%,#d4c8a8 50%,#f0e8d5 100%)}
+.login-card{background:#fff;border:1px solid #c8b888;border-radius:14px;padding:44px 38px;width:400px;max-width:90vw;text-align:center;box-shadow:0 2px 20px rgba(0,0,0,.08)}
+.login-card img.logo{margin-bottom:8px}
+.login-card h1{font-family:'KaiTi','DFKai-SB',serif;font-size:24px;color:#5a4028;margin-bottom:4px;letter-spacing:3px}
+.login-card .sub{font-size:13px;color:#9a8060;margin-bottom:28px}
+.login-card input[type=password]{width:100%;padding:13px 16px;border:1px solid #d4c8b0;border-radius:10px;background:#faf7f0;color:#3a3028;font-size:15px;outline:none;transition:.3s;margin-bottom:14px;font-family:inherit}
+.login-card input[type=password]:focus{border-color:#b8942c;box-shadow:0 0 0 3px rgba(184,148,44,.12)}
+.login-card .login-btn{width:100%;padding:13px;background:#8b6914;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:.3s;font-family:'KaiTi','DFKai-SB',serif;letter-spacing:3px}
+.login-card .login-btn:hover{background:#6b4f10;transform:translateY(-1px)}
+.login-card .err{color:#c0392b;font-size:14px;margin-top:10px;display:none}
+
+/* ===== 后台 ===== */
+.admin-page{display:none;min-height:100vh;background:#f5f0e8}
+.admin-header{background:#fff;border-bottom:2px solid #d4c8b0;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:200}
+.admin-header .logo-wrap{display:flex;align-items:center;gap:14px}
+.admin-header .logo-wrap img{height:36px}
+.admin-header h1{font-family:'KaiTi','DFKai-SB',serif;font-size:19px;color:#5a4028;font-weight:700;letter-spacing:2px}
+.admin-header .hdr-acts{display:flex;gap:8px;align-items:center}
+
+/* 按钮 */
+.btn{padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'KaiTi','DFKai-SB','Noto Serif TC',serif;transition:.2s;display:inline-flex;align-items:center;gap:4px;letter-spacing:1px}
+.btn-gold{background:#8b6914;color:#fff}
+.btn-gold:hover{background:#6b4f10}
+.btn-red{background:#b84040;color:#fff}
+.btn-red:hover{background:#932e2e}
+.btn-outline{background:transparent;border:1px solid #c8b888;color:#5a4028}
+.btn-outline:hover{background:#f5f0e8}
+.btn-sm{padding:6px 10px;font-size:12px}
+.btn-icon{background:transparent;border:1px solid #d4c8b0;padding:6px 8px;font-size:14px;border-radius:6px;cursor:pointer;transition:.2s;line-height:1}
+.btn-icon:hover{background:#f5f0e8;border-color:#b8942c}
+.btn-icon.edit{color:#8b6914}
+.btn-icon.del{color:#b84040}
+
+/* 工具栏 */
+.toolbar{background:#fff;padding:12px 28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid #e8dcc8}
+.toolbar input[type=text]{padding:8px 14px;border:1px solid #d4c8b0;border-radius:7px;background:#faf7f0;color:#3a3028;font-size:13px;outline:none;width:170px;font-family:inherit}
+.toolbar input[type=text]:focus{border-color:#b8942c}
+.toolbar select{padding:8px 12px;border:1px solid #d4c8b0;border-radius:7px;background:#faf7f0;color:#3a3028;font-size:13px;font-family:'KaiTi','DFKai-SB','Noto Serif TC',serif;outline:none;cursor:pointer}
+.toolbar .stats{margin-left:auto;color:#9a8060;font-size:12px}
+
+/* 表格 */
+.table-container{padding:16px 28px;overflow-x:auto}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden}
+.data-table th{background:#8b6914;color:#fff;padding:11px 10px;text-align:left;font-weight:600;white-space:nowrap;font-family:'KaiTi','DFKai-SB',serif;letter-spacing:1px}
+.data-table td{padding:8px 10px;border-bottom:1px solid #f0e8d5;vertical-align:middle;white-space:nowrap;max-width:140px;overflow:hidden}
+.data-table td .marq{display:inline-block;white-space:nowrap;will-change:transform}
+.data-table td .marq.go{animation:marqR 8s linear infinite}
+@keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.data-table td.w-name{max-width:120px}
+.data-table td.w-proj{max-width:150px}
+.data-table td.w-title{max-width:80px}
+.data-table tbody tr:hover td{background:#fdfaf5}
+.data-table tbody tr:nth-child(even) td{background:#faf7f0}
+.data-table .amt{color:#8b6914;font-weight:700;white-space:nowrap}
+.data-table .amt.hl{color:#b84040;font-weight:900}
+.data-table .cat-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;color:#fff;white-space:nowrap;background:#8b6914}
+.cat-急難救助{background:#b84040}
+.cat-敬老撫孤{background:#3a8a3a}
+.cat-宗親文化{background:#6a4ca8}
+.cat-傳醫康養{background:#d4782a}
+.cat-助學興教{background:#c0507a}
+.cat-立基弘善{background:#3a6a9a}
+.type-sk{color:#8b6914}
+.type-wz{color:#1a5632}
+
+/* 操作列按钮横向排列 */
+td .act-group{display:flex;gap:4px;justify-content:center}
+
+/* 弹窗 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border:1px solid #d4c8b0;border-radius:14px;padding:28px;width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,.15)}
+.modal h2{color:#5a4028;font-family:'KaiTi','DFKai-SB',serif;font-size:20px;margin-bottom:18px;letter-spacing:3px;text-align:center}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;color:#6a5038;font-size:12px;margin-bottom:4px;font-weight:600}
+.form-group input,.form-group select{width:100%;padding:9px 14px;border:1px solid #d4c8b0;border-radius:7px;background:#faf7f0;color:#3a3028;font-size:13px;outline:none;font-family:'KaiTi','DFKai-SB','Noto Serif TC',serif}
+.form-group input:focus,.form-group select:focus{border-color:#b8942c}
+.modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.modal-actions .btn{flex:1;justify-content:center;padding:10px}
+
+.upload-zone{border:2px dashed #c8b888;border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:.3s;background:#fdfaf5;margin:8px 0}
+.upload-zone:hover{background:#f5f0e8;border-color:#8b6914}
+.upload-zone svg{width:40px;height:40px;fill:#8b6914;margin-bottom:8px}
+.upload-zone p{color:#9a8060;font-size:13px}
+
+/* 分页 */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;padding:16px 0}
+.page-btn{padding:7px 14px;border:1px solid #d4c8b0;border-radius:6px;background:#fff;color:#5a4028;cursor:pointer;font-family:inherit;font-size:12px;transition:.2s}
+.page-btn:hover:not(:disabled){background:#8b6914;color:#fff;border-color:#8b6914}
+.page-btn.active{background:#8b6914;color:#fff;border-color:#8b6914;font-weight:700}
+.page-btn:disabled{opacity:.35;cursor:not-allowed}
+
+@media(max-width:640px){
+  .admin-header{padding:10px 12px}
+  .admin-header h1{font-size:16px}
+  .toolbar{padding:10px 12px}
+  .table-container{padding:10px}
+  .data-table th,.data-table td{padding:8px 5px;font-size:12px}
+  .modal{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div class="login-page" id="loginPage">
+  <div class="login-card">
+    <img class="logo" src="assets/logo-full.png" style="height:64px" alt="泰國華夏善堂">
+    <h1>功德榜管理後台</h1>
+    <p class="sub">數據管理中心</p>
+    <input type="password" id="pwdInput" placeholder="請輸入管理密碼" autocomplete="off">
+    <button class="login-btn" id="loginBtn">登 錄</button>
+    <p class="err" id="loginError">密碼錯誤，請重新輸入</p>
+  </div>
+</div>
+
+<!-- 后台 -->
+<div class="admin-page" id="adminPage">
+  <header class="admin-header">
+    <div class="logo-wrap"><img src="assets/logo-full.png" alt=""><h1>功德榜管理系統</h1></div>
+    <div class="hdr-acts">
+      <span id="totalStats" style="color:#9a8060;font-size:12px;margin-right:8px"></span>
+      <button class="btn btn-gold btn-sm" onclick="showUploadModal()">📤 上傳Excel</button>
+      <button class="btn btn-gold btn-sm" onclick="openAddModal()">➕ 新增記錄</button>
+      <button class="btn btn-red btn-sm" onclick="batchDelete()">🗑 批量刪除</button>
+      <button class="btn btn-outline btn-sm" onclick="logout()">退出</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="🔍 搜索姓名..." oninput="renderTable()">
+    <select id="filterCat" onchange="renderTable()">
+      <option value="">全部分類</option>
+      <option value="急難救助">急難救助</option>
+      <option value="敬老撫孤">敬老撫孤</option>
+      <option value="宗親文化">宗親文化</option>
+      <option value="傳醫康養">傳醫康養</option>
+      <option value="助學興教">助學興教</option>
+      <option value="立基弘善">立基弘善</option>
+    </select>
+    <span class="stats" id="filteredStats"></span>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table" id="dataTable">
+      <thead>
+        <tr>
+          <th style="width:36px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+          <th>姓名</th>
+          <th>稱謂</th>
+          <th>類型</th>
+          <th>金額（銖）</th>
+          <th>樂捐項目</th>
+          <th>捐款日期</th>
+          <th style="width:80px;text-align:center">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- 编辑弹窗 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2 id="editTitle">新增捐款記錄</h2>
+    <input type="hidden" id="editId">
+    <div class="form-group">
+      <label>姓名 *</label>
+      <input type="text" id="editName" placeholder="請輸入捐款人姓名" required>
+    </div>
+    <div class="form-group">
+      <label>稱謂</label>
+      <input type="text" id="editTitle_input" placeholder="如：理事長、會員、善信">
+    </div>
+    <div class="form-group">
+      <label>類型 *</label>
+      <select id="editType">
+        <option value="善款">善款</option>
+        <option value="物資">物資</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>捐款金額（銖）*</label>
+      <input type="number" id="editAmount" placeholder="請輸入金額數字" required min="1">
+    </div>
+    <div class="form-group">
+      <label>樂捐項目 *</label>
+      <input type="text" id="editProject" placeholder="請輸入樂捐項目名稱" required>
+    </div>
+    <div class="form-group">
+      <label>捐款日期 *</label>
+      <input type="date" id="editDate" required>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" onclick="saveRecord()">保存</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Excel上传弹窗 -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <h2>📊 上傳 Excel 數據</h2>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+      <p>點擊或拖拽 Excel 文件到此處</p>
+      <p style="color:#bbb;font-size:11px;margin-top:6px">支持 .xlsx / .xls<br>格式：日期 | 捐助人 | 類型 | 稱謂 | 項目 | 金額</p>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="handleFile(event)">
+    <div id="uploadPreview" style="margin:10px 0;text-align:center;font-size:13px"></div>
+    <div style="display:flex;gap:10px;align-items:center;margin:8px 0;font-size:13px">
+      <label style="cursor:pointer"><input type="radio" name="uploadMode" value="append" checked> 追加數據</label>
+      <label style="cursor:pointer;margin-left:12px"><input type="radio" name="uploadMode" value="overwrite"> 覆蓋全部</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="confirmUploadBtn" onclick="confirmUpload()" disabled>確認導入</button>
+      <button class="btn btn-outline" onclick="closeUploadModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script>
+const ADMIN_PASSWORD='Thxcf@2026';
+const STORAGE_KEY='gongdebang_donations';
+const PAGE_SIZE=15;
+let currentPage=1,parsedData=null;
+
+function loadData(){try{const d=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];let changed=false;const ts=Date.now();d.forEach((r,i)=>{if(!r._id||!Number.isInteger(r._id)){r._id=ts+i;changed=true}});if(changed){console.log('_id修復:',d.length,'條');localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}return d}catch(e){console.error('loadData error:',e);return[]}}
+function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}
+
+// 登录
+document.getElementById('loginBtn').addEventListener('click',()=>{
+  if(document.getElementById('pwdInput').value===ADMIN_PASSWORD){
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('adminPage').style.display='block';
+    renderTable();
+  }else{
+    document.getElementById('loginError').style.display='block';
+    setTimeout(()=>{document.getElementById('loginError').style.display='none'},2500);
+  }
+});
+document.getElementById('pwdInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()});
+
+function logout(){
+  document.getElementById('adminPage').style.display='none';
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('pwdInput').value='';
+}
+
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// 表格渲染
+function renderTable(){
+  let data=loadData();
+  const search=document.getElementById('searchInput').value.trim().toLowerCase();
+  const catFilter=document.getElementById('filterCat').value;
+  if(search) data=data.filter(d=>d.name.toLowerCase().includes(search));
+  if(catFilter) data=data.filter(d=>d.category===catFilter);
+  data.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const total=data.length,tp=Math.ceil(total/PAGE_SIZE)||1;
+  if(currentPage>tp) currentPage=tp;
+  const start=(currentPage-1)*PAGE_SIZE,pg=data.slice(start,start+PAGE_SIZE);
+  document.getElementById('totalStats').textContent=`共 ${loadData().length} 條記錄`;
+  document.getElementById('filteredStats').textContent=search||catFilter?`篩選：${total} 條`:'';
+
+  const tbody=document.getElementById('tableBody');
+  if(pg.length===0){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:30px;color:#bbb">暫無數據</td></tr>`;
+  }else{
+    tbody.innerHTML=pg.map((d)=>{
+      const hi=d.amount>=100000;
+      return `<tr>
+        <td><input type="checkbox" class="row-cb" data-id="${d._id}"></td>
+        <td class="w-name"><span class="marq">${esc(d.name)}</span></td>
+        <td class="w-title"><span class="marq">${esc(d.title||'-')}</span></td>
+        <td><span class="${d.type==='物資'?'type-wz':'type-sk'}">${esc(d.type||'善款')}</span></td>
+        <td class="amt${hi?' hl':''}">${Number(d.amount).toLocaleString()}</td>
+        <td class="w-proj"><span class="marq"><span class="cat-badge cat-${esc(d.category||'')}">${esc(d.category||'-')}</span></span></td>
+        <td>${d.date}</td>
+        <td><div class="act-group">
+          <button class="btn-icon edit" onclick="openEditModal('${d._id}')" title="編輯">✏️</button>
+          <button class="btn-icon del" onclick="deleteRecord('${d._id}')" title="刪除">🗑</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+    // 激活溢出单元格的跑馬燈
+    setTimeout(()=>{
+      tbody.querySelectorAll('.marq').forEach(s=>{
+        if(s.scrollWidth>s.parentElement.clientWidth+2){
+          s.classList.add('go');
+          s.innerHTML=s.textContent+'&emsp;&emsp;'+s.textContent;
+        }
+      });
+    },50);
+  }
+  renderPagination(tp);
+}
+
+function renderPagination(tp){
+  let h=`<button class="page-btn" ${currentPage<=1?'disabled':''} onclick="goPage(${currentPage-1})">上一頁</button>`;
+  for(let i=1;i<=tp;i++){
+    if(i===1||i===tp||(i>=currentPage-1&&i<=currentPage+1))
+      h+=`<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    else if(i===currentPage-2||i===currentPage+2) h+='<span style="color:#bbb">…</span>';
+  }
+  h+=`<button class="page-btn" ${currentPage>=tp?'disabled':''} onclick="goPage(${currentPage+1})">下一頁</button>`;
+  document.getElementById('pagination').innerHTML=h;
+}
+function goPage(p){currentPage=p;renderTable()}
+
+function toggleSelectAll(){
+  const c=document.getElementById('selectAll').checked;
+  document.querySelectorAll('.row-cb').forEach(cb=>cb.checked=c);
+}
+
+// 增删改
+function openAddModal(){
+  document.getElementById('editTitle').textContent='新增捐款記錄';
+  document.getElementById('editId').value='';
+  document.getElementById('editName').value='';
+  document.getElementById('editTitle_input').value='';
+  document.getElementById('editType').value='善款';
+  document.getElementById('editAmount').value='';
+  document.getElementById('editProject').value='';
+  document.getElementById('editDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('editModal').classList.add('show');
+}
+function openEditModal(_id){
+  const data=loadData();const d=data.find(r=>String(r._id)===String(_id));if(!d)return;
+  document.getElementById('editTitle').textContent='編輯捐款記錄';
+  document.getElementById('editId').value=d._id;
+  document.getElementById('editName').value=d.name;
+  document.getElementById('editTitle_input').value=d.title||'';
+  document.getElementById('editType').value=d.type||'善款';
+  document.getElementById('editAmount').value=d.amount;
+  document.getElementById('editProject').value=d.project||'';
+  document.getElementById('editDate').value=d.date;
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal(){document.getElementById('editModal').classList.remove('show')}
+
+function saveRecord(){
+  const _id=document.getElementById('editId').value;
+  const name=document.getElementById('editName').value.trim();
+  const title=document.getElementById('editTitle_input').value.trim();
+  const type=document.getElementById('editType').value;
+  const amount=parseInt(document.getElementById('editAmount').value);
+  const project=document.getElementById('editProject').value.trim();
+  const date=document.getElementById('editDate').value;
+  if(!name||!amount||!project||!date){alert('請填寫完整必填項！');return}
+  const p1=project.substring(0,1);
+  const cm={急:'急難救助',敬:'敬老撫孤',宗:'宗親文化',傳:'傳醫康養',助:'助學興教',立:'立基弘善'};
+  const category=cm[p1]||project;
+  const rec={_id:_id||Date.now(),name,title,type,amount,category,project,date};
+  const data=loadData();
+  const idx=data.findIndex(r=>String(r._id)===String(_id));
+  if(idx>=0) data[idx]=rec; else data.push(rec);
+  saveData(data);closeEditModal();renderTable();
+}
+
+function deleteRecord(_id){
+  if(!confirm('確定刪除此記錄？'))return;
+  const data=loadData();
+  const ids=data.map(r=>String(r._id));
+  const sid=String(_id);
+  const idx=ids.indexOf(sid);
+  if(idx<0){alert('找不到記錄！\n查找ID: '+sid+'\n現有ID: '+ids.slice(0,5).join(',')+(ids.length>5?'...':''));return}
+  data.splice(idx,1);saveData(data);renderTable();
+}
+function batchDelete(){
+  const cbs=[...document.querySelectorAll('.row-cb:checked')];
+  if(!cbs.length){alert('請先勾選記錄');return}
+  if(!confirm(`確定刪除 ${cbs.length} 條記錄？`))return;
+  const data=loadData();
+  const ids=cbs.map(c=>c.dataset.id);
+  let del=0;
+  ids.forEach(id=>{const i=data.findIndex(r=>String(r._id)===String(id));if(i>=0){data.splice(i,1);del++}});
+  if(del===0){alert('未找到任何匹配記錄');return}
+  saveData(data);
+  document.getElementById('selectAll').checked=false;
+  renderTable();
+}
+
+// Excel
+function showUploadModal(){
+  document.getElementById('uploadPreview').innerHTML='';
+  document.getElementById('confirmUploadBtn').disabled=true;
+  parsedData=null;document.getElementById('fileInput').value='';
+  document.getElementById('uploadModal').classList.add('show');
+}
+function closeUploadModal(){document.getElementById('uploadModal').classList.remove('show')}
+
+function handleFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const json=XLSX.utils.sheet_to_json(ws,{raw:false});
+      // 顯示原始標題用於調試
+      const rawKeys=json.length>0?Object.keys(json[0]):[];
+      // 字段映射 — key 用小寫做模糊匹配
+      const fm={'姓名':'name','捐贈人':'name','捐助人':'name','名字':'name','name':'name','姓名(必填)':'name',
+        '稱謂':'title','職銜':'title','title':'title','职称':'title','头衔':'title','称呼':'title',
+        '類型':'type','种类':'type','类型':'type','type':'type','类别':'type','捐款类型':'type','捐赠类型':'type',
+        '金額':'amount','捐款金額':'amount','金额':'amount','amount':'amount','数额':'amount','捐款额':'amount',
+        '項目':'project','樂捐項目':'project','project':'project','项目':'project','乐捐项目':'project','捐款项目':'project',
+        '日期':'date','捐款日期':'date','date':'date','时间':'date','捐款时间':'date'};
+      function matchKey(k){
+        const s=String(k).trim();
+        if(fm[s]) return fm[s];
+        const sl=s.toLowerCase();
+        for(const[kk,vv] of Object.entries(fm)){if(kk.toLowerCase()===sl) return vv}
+        return null;
+      }
+      // 解析日期字符串 "2025/7/3" 或 "2025-07-03" → "2025-07-03"
+      function parseDate(v){
+        if(!v) return '';
+        const s=String(v).trim();
+        if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const m=s.match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/);
+        if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+        return s;
+      }
+      // 解析金额：去空格、逗号、千分位
+      function parseAmt(v){return Number(String(v).replace(/[,\s]/g,''))||0}
+      parsedData=json.map((row,i)=>{
+        const n={};
+        for(const[k,v] of Object.entries(row)){
+          const m=matchKey(k);
+          if(!m) continue;
+          if(m==='amount'){n.amount=parseAmt(v);continue}
+          if(m==='date'){n.date=parseDate(v);continue}
+          n[m]=String(v).trim();
+        }
+        if(!n.project) n.project='急難救助';
+        const cm={'急':'急難救助','敬':'敬老撫孤','宗':'宗親文化','傳':'傳醫康養','助':'助學興教','立':'立基弘善'};
+        n.category=cm[(n.project||'').substring(0,1)]||n.project;
+        if(!n.type||n.type==='') n.type='善款';
+        if(!n.date||n.date==='') n.date=new Date().toISOString().split('T')[0];
+        n._id=Date.now()+i;
+        return n;
+      }).filter(d=>d.name&&d.amount>0);
+      const preview=parsedData.slice(0,3).map(d=>`${d.name}(${d.type}) ${d.amount}銖 ${d.project} ${d.date}`).join('<br>');
+      document.getElementById('uploadPreview').innerHTML=`📋 標題: ${rawKeys.join(' | ')}<br>✅ 解析 <strong>${parsedData.length}</strong> 條<br><small style="color:#666">${preview}${parsedData.length>3?'<br>...':''}</small>`;
+      document.getElementById('confirmUploadBtn').disabled=false;
+    }catch(err){
+      document.getElementById('uploadPreview').innerHTML=`<span style="color:#c0392b">❌ 解析失敗：${err.message}</span>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function confirmUpload(){
+  if(!parsedData||!parsedData.length) return;
+  const mode=document.querySelector('input[name="uploadMode"]:checked').value;
+  if(mode==='overwrite'){
+    saveData(parsedData);
+    alert('已覆蓋全部數據，共 '+parsedData.length+' 條記錄');
+  }else{
+    const data=loadData();
+    data.push(...parsedData);
+    saveData(data);
+    alert('已追加 '+parsedData.length+' 條記錄，共 '+data.length+' 條');
+  }
+  closeUploadModal();renderTable();
+}
+
+renderTable();
+</script>
+</body>
+</html>
