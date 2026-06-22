@@ -39,7 +39,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
 /* 功德芳名錄 图片按钮 — 呼吸金光，响应式缩放 */
-.scroll-title{z-index:55;left:17.1%;top:21%;width:clamp(230px,63%,445px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
+.scroll-title{z-index:55;left:20.6%;top:21%;width:clamp(230px,63%,420px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
 .scroll-title img{width:auto;height:100%;object-fit:contain;pointer-events:none;animation:titleGold 3s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(200,160,50,.5))}
 .scroll-title:hover img{filter:drop-shadow(0 0 12px rgba(220,180,60,.8)) brightness(1.15);transform:scale(1.04)}
 .scroll-title.flash img{animation:none;filter:drop-shadow(0 0 24px #ffd700) brightness(1.4);transform:scale(1.08)}
@@ -82,36 +82,8 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .entry .marq.go{animation:marqR 8s linear infinite}
 @keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* 香烟效果 — 白色半透明 blur 叠加 */
-.smoke-area{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%;overflow:visible}
-/* 三柱烟雾 */
-.smoke-col{position:absolute;bottom:5%;width:18%;height:60%;border-radius:40%;filter:blur(10px);opacity:0;animation:smokeRise 5s ease-out infinite}
-.smoke-col::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 90%,rgba(255,255,255,.45) 0%,rgba(255,255,250,.22) 35%,transparent 100%)}
-.smoke-l{left:12%;animation-delay:0s}
-.smoke-c{left:41%;animation-delay:1.7s}
-.smoke-r{left:70%;animation-delay:3.3s}
-@keyframes smokeRise{
-  0%{opacity:.8;transform:translateY(30%) scaleX(1.2) scaleY(.6)}
-  40%{opacity:.5;transform:translateY(-15%) scaleX(.9) scaleY(1.3)}
-  80%{opacity:.15;transform:translateY(-45%) scaleX(.6) scaleY(2)}
-  100%{opacity:0;transform:translateY(-65%) scaleX(.4) scaleY(2.5)}
-}
-/* 汇聚细流 */
-.smoke-stream{position:absolute;left:41%;width:18%;bottom:15%;height:75%;filter:blur(2px);opacity:0;animation:streamRise 4s ease-out infinite;animation-delay:1s}
-.smoke-stream::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to top,rgba(255,255,255,.35),rgba(255,255,252,.2) 60%,transparent 100%)}
-@keyframes streamRise{
-  0%{opacity:.6;transform:translateY(20%) scaleY(.8)}
-  50%{opacity:.4;transform:translateY(-30%) scaleY(1)}
-  100%{opacity:0;transform:translateY(-70%) scaleY(1.2)}
-}
-/* 顶部扩散 */
-.smoke-disp{position:absolute;left:35%;top:0;width:30%;height:25%;filter:blur(14px);opacity:0;animation:dispFade 5s ease-out infinite;animation-delay:2.5s}
-.smoke-disp::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.25),transparent 80%)}
-@keyframes dispFade{
-  0%{opacity:0;transform:scale(.3)}
-  40%{opacity:.35;transform:scale(1.6)}
-  100%{opacity:0;transform:scale(3)}
-}
+/* 香炉青烟 */
+.smoke-cvs{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%}
 
 /* 复制账号 */
 .copy-btn{z-index:70;left:63.11%;top:80.05%;width:clamp(22px,4.2%,34px);aspect-ratio:1.25;height:auto;border-radius:6px;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(10px,1.6vw,14px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
@@ -167,13 +139,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   <div class="pos-abs scroll-title" id="scrollTitle" onclick="backToAll()"><img src="assets/title-text.png" alt="功德芳名錄"></div>
 
   <!-- 香炉青烟 -->
-  <div class="pos-abs smoke-area">
-    <div class="smoke-col smoke-l"></div>
-    <div class="smoke-col smoke-c"></div>
-    <div class="smoke-col smoke-r"></div>
-    <div class="smoke-stream"></div>
-    <div class="smoke-disp"></div>
-  </div>
+  <canvas class="pos-abs smoke-cvs" id="smokeCanvas"></canvas>
 
   <!-- 复制按钮 -->
   <div class="pos-abs copy-btn" id="copyBtn" title="複製銀行帳號">⧉</div>
@@ -362,8 +328,52 @@ ab.addEventListener('click',()=>{
   audOn=!audOn;
 });
 
+// 简净白烟 — 微点飘升，自然缭绕
+const scvs=document.getElementById('smokeCanvas'),sctx=scvs.getContext('2d');
+let sW,sH;
+function rzSmoke(){sW=scvs.width=scvs.offsetWidth;sH=scvs.height=scvs.offsetHeight}
+window.addEventListener('resize',rzSmoke);
+class SP{
+  reset(){
+    const sx=[.34,.50,.66][Math.floor(Math.random()*3)];
+    this.x=sx*sW+(Math.random()-.5)*14;
+    this.y=sH*.95+Math.random()*3;
+    this.vx=(Math.random()-.5)*.25;
+    this.vy=-(Math.random()*.45+.18);
+    this.r=.4+Math.random()*2.2;
+    this.a=.04+Math.random()*.08;
+    this.life=0; this.max=140+Math.random()*200;
+  }
+  update(){
+    this.life++; const t=this.life/this.max;
+    this.x+=this.vx+Math.sin(this.life*.015)*.12;
+    this.y+=this.vy;
+    this.x+=(.5*sW-this.x)*.003;
+    if(t>.35) this.a-=.0004;
+    if(this.y<-8||this.a<.001) this.reset();
+  }
+  draw(){
+    sctx.beginPath(); sctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    sctx.fillStyle=`rgba(255,255,250,${this.a})`; sctx.fill();
+  }
+}
+let sps=[],smReady=false;
+function initSmoke(){
+  rzSmoke();
+  if(sW<8||sH<8){requestAnimationFrame(initSmoke);return}
+  sps=Array.from({length:300},()=>new SP());
+  smReady=true;
+}
+function animSmoke(){
+  if(!smReady){requestAnimationFrame(animSmoke);return}
+  sctx.clearRect(0,0,sW,sH);
+  sps.forEach(p=>{p.update();p.draw()});
+  requestAnimationFrame(animSmoke);
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   renderList("全部");
+  initSmoke();animSmoke();
 });
 </script>
 </body>
