@@ -38,12 +38,11 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 /* 呼吸光晕 — drop-shadow 精确贴合牌匾轮廓 */
 @keyframes plaqueGlow{0%,100%{filter:drop-shadow(0 0 5px var(--gc,#c8a050))}50%{filter:drop-shadow(0 0 16px var(--gc,#c8a050)) brightness(1.15)}}
 
-/* 功德芳名錄 图片按钮 — 呼吸金光，响应式缩放 */
-.scroll-title{z-index:55;left:19.2%;top:21.7%;width:clamp(230px,63%,400px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
-.scroll-title img{width:auto;height:100%;object-fit:contain;pointer-events:none;animation:titleGold 3s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(200,160,50,.5))}
-.scroll-title:hover img{filter:drop-shadow(0 0 12px rgba(220,180,60,.8)) brightness(1.15);transform:scale(1.04)}
-.scroll-title.flash img{animation:none;filter:drop-shadow(0 0 24px #ffd700) brightness(1.4);transform:scale(1.08)}
-@keyframes titleGold{0%,100%{filter:drop-shadow(0 0 3px rgba(180,140,40,.4))}50%{filter:drop-shadow(0 0 10px rgba(210,165,50,.7))}}
+/* 功德芳名錄 图片按钮 — 透明，触碰发光 */
+.scroll-title{z-index:55;left:19.2%;top:22.05%;width:clamp(230px,63%,400px);height:clamp(65px,10.2vw,95px);pointer-events:auto;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:center}
+.scroll-title img{width:auto;height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .3s,filter .3s,transform .3s}
+.scroll-title:hover img,.scroll-title:active img{opacity:1;filter:drop-shadow(0 0 16px rgba(220,180,60,.9)) brightness(1.2);transform:scale(1.05)}
+.scroll-title.flash img{opacity:1;filter:drop-shadow(0 0 28px #ffd700) brightness(1.5);transform:scale(1.1);transition:opacity 0s}
 
 /* 按钮位置 — 响应式百分比偏移，随场景宽度等比缩放 */
 .btn-l1{left:clamp(-12px,-0.83%,-3px);top:30%}
@@ -82,8 +81,20 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .entry .marq.go{animation:marqR 8s linear infinite}
 @keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* 香炉青烟 */
-.smoke-cvs{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%}
+/* 香烟 — 白色半透明微点CSS动画 */
+.smoke-area{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%;overflow:hidden}
+.smoke-dot{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:0;animation:smokeUp 4s ease-out infinite}
+.smoke-dot:nth-child(3n+1){left:15%;animation-delay:0s}
+.smoke-dot:nth-child(3n+2){left:48%;animation-delay:1.3s}
+.smoke-dot:nth-child(3n+3){left:81%;animation-delay:2.6s}
+.smoke-dot:nth-child(6n+1){width:3px;height:3px;animation-duration:3.5s}
+.smoke-dot:nth-child(6n+4){width:5px;height:5px;animation-duration:4.5s}
+@keyframes smokeUp{
+  0%{bottom:2%;opacity:.5;transform:translateX(0) scale(1)}
+  50%{opacity:.3;transform:translateX(calc(var(--drift,0)*6px)) scale(1.5)}
+  90%{opacity:.05;transform:translateX(calc(var(--drift,0)*10px)) scale(2)}
+  100%{bottom:95%;opacity:0;transform:translateX(calc(var(--drift,0)*14px)) scale(2.5)}
+}
 
 /* 复制账号 */
 .copy-btn{z-index:70;left:63.11%;top:80.05%;width:clamp(22px,4.2%,34px);aspect-ratio:1.25;height:auto;border-radius:6px;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(10px,1.6vw,14px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
@@ -138,8 +149,8 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   <!-- 功德芳名錄 图片按钮 -->
   <div class="pos-abs scroll-title" id="scrollTitle" onclick="backToAll()"><img src="assets/title-text.png" alt="功德芳名錄"></div>
 
-  <!-- 香炉青烟 -->
-  <canvas class="pos-abs smoke-cvs" id="smokeCanvas"></canvas>
+  <!-- 香炉白烟 -->
+  <div class="pos-abs smoke-area" id="smokeArea"></div>
 
   <!-- 复制按钮 -->
   <div class="pos-abs copy-btn" id="copyBtn" title="複製銀行帳號">⧉</div>
@@ -328,52 +339,24 @@ ab.addEventListener('click',()=>{
   audOn=!audOn;
 });
 
-// 白烟 — 高可见度微点飘升
-const scvs=document.getElementById('smokeCanvas'),sctx=scvs.getContext('2d');
-let sW,sH;
-function rzSmoke(){sW=scvs.width=scvs.offsetWidth;sH=scvs.height=scvs.offsetHeight}
-window.addEventListener('resize',rzSmoke);
-class SP{
-  reset(){
-    const sx=[.33,.50,.67][Math.floor(Math.random()*3)];
-    this.x=sx*sW+(Math.random()-.5)*16;
-    this.y=sH*.94+Math.random()*4;
-    this.vx=(Math.random()-.5)*.3;
-    this.vy=-(Math.random()*.5+.25);
-    this.r=1+Math.random()*5;
-    this.a=.12+Math.random()*.2;
-    this.life=0; this.max=120+Math.random()*180;
+// 白烟 — CSS动画微点
+(function(){
+  const sa=document.getElementById('smokeArea');
+  if(!sa) return;
+  for(let i=0;i<60;i++){
+    const d=document.createElement('div');
+    d.className='smoke-dot';
+    d.style.setProperty('--drift',(Math.random()-.5).toFixed(2));
+    d.style.animationDelay=(Math.random()*4).toFixed(1)+'s';
+    d.style.animationDuration=(3+Math.random()*3).toFixed(1)+'s';
+    d.style.width=(2+Math.random()*4)+'px';
+    d.style.height=d.style.width;
+    sa.appendChild(d);
   }
-  update(){
-    this.life++; const t=this.life/this.max;
-    this.x+=this.vx+Math.sin(this.life*.02)*.15;
-    this.y+=this.vy;
-    this.x+=(.5*sW-this.x)*.004;
-    if(t>.6) this.a-=.002;
-    if(this.y<-6||this.a<.004) this.reset();
-  }
-  draw(){
-    sctx.beginPath(); sctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-    sctx.fillStyle=`rgba(240,235,220,${this.a})`; sctx.fill();
-  }
-}
-let sps=[],smReady=false;
-function initSmoke(){
-  rzSmoke();
-  if(sW<8||sH<8){requestAnimationFrame(initSmoke);return}
-  sps=Array.from({length:400},()=>new SP());
-  smReady=true;
-}
-function animSmoke(){
-  if(!smReady){requestAnimationFrame(animSmoke);return}
-  sctx.clearRect(0,0,sW,sH);
-  sps.forEach(p=>{p.update();p.draw()});
-  requestAnimationFrame(animSmoke);
-}
+})();
 
 window.addEventListener('DOMContentLoaded',()=>{
   renderList("全部");
-  initSmoke();animSmoke();
 });
 </script>
 </body>
