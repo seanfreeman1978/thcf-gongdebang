@@ -34,7 +34,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .query-btn{z-index:61;left:clamp(15px,2.2%,23px);top:24%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(18px,3vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900;line-height:1}
 .query-btn:hover{background:rgba(160,120,50,.6);border-color:rgba(220,190,90,.7);color:#ffe8a0;box-shadow:0 0 14px rgba(200,160,50,.5);transform:scale(1.1)}
 /* 查询弹窗 — 白色毛玻璃 */
-.search-overlay{position:fixed;inset:0;z-index:900;background:rgba(235,233,228,.72);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;padding-top:clamp(60px,12vh,120px)}
+.search-overlay{position:fixed;inset:0;z-index:900;background:rgba(180,178,175,.52);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;padding-top:clamp(60px,12vh,120px)}
 .search-overlay.show{display:flex}
 .search-box{width:88%;max-width:520px;display:flex;flex-direction:column;gap:clamp(10px,2vh,16px)}
 .search-box .srch-input{width:100%;padding:clamp(12px,2vh,18px) 16px;border:2px solid #c8a860;border-radius:clamp(8px,1.5vw,14px);background:#fff;color:#3a3028;font-size:clamp(16px,2.5vw,22px);outline:none;font-family:'KaiTi','STKaiti','DFKai-SB','Noto Serif TC',serif;transition:.3s}
@@ -108,20 +108,9 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .entry .marq.go{animation:marqR 8s linear infinite}
 @keyframes marqR{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* 香烟 — 简明雾化烟柱 */
-.smoke-area{z-index:45;pointer-events:none;left:35%;top:26.5%;width:30%;height:35%;overflow:hidden}
-.smoke-wisp{position:absolute;bottom:0;width:clamp(14px,2.5vw,22px);height:50%;border-radius:30%;filter:blur(5px);background:radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.5),rgba(255,255,245,.2) 50%,transparent 100%);animation:wispUp 14s ease-out infinite}
-.smoke-wisp:nth-child(3n+1){left:42%}
-.smoke-wisp:nth-child(3n+2){left:50%}
-.smoke-wisp:nth-child(3n+3){left:58%}
-.smoke-wisp:nth-child(6n+1){animation-duration:17s}
-.smoke-wisp:nth-child(6n+4){animation-duration:12s}
-@keyframes wispUp{
-  0%{bottom:0;opacity:.5;transform:translateX(0) scaleY(.4)}
-  40%{opacity:.3;transform:translateX(calc(var(--sw,0)*5px)) scaleY(1)}
-  80%{opacity:.08;transform:translateX(calc(var(--sw,0)*10px)) scaleY(2.5)}
-  100%{bottom:95%;opacity:0;transform:translateX(calc(var(--sw,0)*15px)) scaleY(3.5)}
-}
+/* 香烟 canvas — 细线飘烟 */
+.smoke-area{z-index:45;pointer-events:none;left:35%;top:22%;width:30%;height:40%}
+.smoke-area canvas{display:block;width:100%;height:100%}
 
 /* 复制账号 — 无外框透明按钮 */
 .copy-btn{z-index:70;left:63.11%;top:80.05%;width:clamp(22px,4.2%,34px);aspect-ratio:1.25;height:auto;border-radius:6px;background:transparent;border:none;color:#c8a050;font-size:clamp(10px,1.6vw,14px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
@@ -180,7 +169,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   <div class="pos-abs back-btn" id="backBtn" onclick="backToAll()" title="返回全部"><span style="display:inline-block;transform:translateY(-2px)">↺</span></div>
 
   <!-- 香烟 -->
-  <div class="pos-abs smoke-area" id="smokeArea"></div>
+  <div class="pos-abs smoke-area" id="smokeArea"><canvas id="smokeCanvas"></canvas></div>
 
   <!-- 复制按钮 -->
   <div class="pos-abs copy-btn" id="copyBtn" title="複製銀行帳號">⧉</div>
@@ -436,6 +425,7 @@ function openSearch(){
   document.getElementById('srchInput').value='';
   document.getElementById('srchInput').focus();
   document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢（支援繁簡體）</div>';
+  document.getElementById('btnMultiShow').style.display='none';
 }
 
 function closeSearch(){
@@ -631,17 +621,77 @@ backToAll=function(){
   _origBackToAll();
 };
 
-// 烟雾 — 简明白雾柱
+// 香烟 — Canvas 细线飘烟
 (function(){
-  const sa=document.getElementById('smokeArea');
-  if(!sa) return;
-  for(let i=0;i<12;i++){
-    const d=document.createElement('div');
-    d.className='smoke-wisp';
-    d.style.setProperty('--sw',(Math.random()-.5).toFixed(2));
-    d.style.animationDelay=(Math.random()*14).toFixed(1)+'s';
-    sa.appendChild(d);
+  var cvs=document.getElementById('smokeCanvas');
+  if(!cvs) return;
+  var ctx=cvs.getContext('2d');
+  var W,H,lines=[];
+  var basePositions=[0.42,0.50,0.58]; // 三炷香
+
+  function resize(){
+    var rect=cvs.parentElement.getBoundingClientRect();
+    var dpr=window.devicePixelRatio||1;
+    W=rect.width;H=rect.height;
+    cvs.width=W*dpr;cvs.height=H*dpr;
+    cvs.style.width=W+'px';cvs.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
   }
+  resize();window.addEventListener('resize',resize);
+
+  // 每帧生成若干条烟线
+  var spawnTimer=0;
+  function spawn(){
+    var pos=basePositions[Math.floor(Math.random()*3)];
+    var x=W*pos+(Math.random()-.5)*W*0.02;
+    var life=4+Math.random()*5; // 秒
+    lines.push({
+      x:x, y:H, life:life, maxLife:life,
+      vx:(Math.random()-.5)*W*0.003, // 轻微横向飘动
+      sway:Math.random()*Math.PI*2, swaySpeed:0.5+Math.random()*1.5, swayAmp:W*0.003+Math.random()*W*0.008,
+      alpha:0.15+Math.random()*0.2
+    });
+  }
+
+  function draw(ts){
+    ctx.clearRect(0,0,W,H);
+    var dt=Math.min(0.05,ts?(ts-(draw._last||ts))/1000:0.016);
+    draw._last=ts;
+
+    spawnTimer+=dt;
+    // 每 0.08~0.15 秒生成一条
+    while(spawnTimer>0.08+Math.random()*0.07){spawn();spawnTimer-=0.08+Math.random()*0.07}
+    if(lines.length>80) lines.splice(0,lines.length-80);
+
+    for(var i=lines.length-1;i>=0;i--){
+      var l=lines[i];
+      l.life-=dt;
+      if(l.life<=0){lines.splice(i,1);continue}
+      var t=1-l.life/l.maxLife; // 0=底部, 1=顶部
+      var cy=H*(1-t*1.05);
+      var sway=Math.sin(l.sway+t*l.swaySpeed*10)*l.swayAmp*(1+t*3);
+      var cx=l.x+sway+l.vx*t*30;
+
+      var fade=t<0.15?t/0.15:(t>0.7?(1-t)/0.3:1);
+      var alpha=l.alpha*fade*(t>0.65?0.8:1);
+
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      // 用贝塞尔曲线画微微弯曲的线
+      var segH=H*0.3;
+      var cp1x=cx+sway*0.3, cp1y=cy+segH*0.3;
+      var cp2x=cx-sway*0.2, cp2y=cy+segH*0.7;
+      var endX=cx-sway*0.1, endY=Math.max(0,cy+segH);
+      if(endY<cy+segH*0.5) endY=cy+segH;
+      ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,endX,Math.min(H, endY));
+      ctx.strokeStyle='rgba(220,215,200,'+alpha.toFixed(3)+')';
+      ctx.lineWidth=0.5+(1-t)*1.2;
+      ctx.lineCap='round';
+      ctx.stroke();
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
 })();
 
 window.addEventListener('DOMContentLoaded',async()=>{await renderList("全部")});
