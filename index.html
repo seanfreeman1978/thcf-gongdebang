@@ -265,8 +265,9 @@ async function renderList(cat){
   // 首次加载时种子数据 — 必须等待写入完成
   if(data.length===0){
     data=SEED;
+    const db=await openIDB();
     await new Promise((resolve,reject)=>{
-      const tx=(await openIDB()).transaction(STORE_NAME,'readwrite');
+      const tx=db.transaction(STORE_NAME,'readwrite');
       const store=tx.objectStore(STORE_NAME);
       SEED.forEach(d=>store.add(d));
       tx.oncomplete=resolve;
