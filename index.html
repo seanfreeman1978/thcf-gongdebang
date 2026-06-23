@@ -49,8 +49,8 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .search-results .sr-item .sr-txt{color:#3a3028;font-size:clamp(13px,2vw,16px);flex:1}
 .search-results .sr-item .sr-count{color:#9a8060;font-size:clamp(10px,1.5vw,13px);flex-shrink:0}
 .search-results .sr-empty{text-align:center;padding:30px 14px;color:#b0a080;font-size:clamp(13px,2vw,16px)}
-.search-close{position:absolute;top:clamp(14px,3vh,28px);right:clamp(14px,3vw,28px);width:clamp(36px,6vw,48px);height:clamp(36px,6vw,48px);border-radius:50%;background:rgba(200,170,120,.15);border:2px solid #c8a860;color:#8b6914;font-size:clamp(18px,3vw,26px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
-.search-close:hover{background:rgba(200,160,80,.25);color:#5a3a10}
+.search-close{position:absolute;top:clamp(14px,3vh,28px);right:clamp(14px,3vw,28px);width:clamp(36px,6vw,48px);height:clamp(36px,6vw,48px);border-radius:50%;background:rgba(180,170,155,.45);border:2px solid #999;color:#444;font-size:clamp(18px,3vw,26px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;font-weight:700;z-index:910}
+.search-close:hover{background:rgba(140,130,115,.6);color:#222;border-color:#666}
 .sr-cb{width:clamp(16px,2.5vw,20px);height:clamp(16px,2.5vw,20px);accent-color:#8b6914;flex-shrink:0;cursor:pointer}
 .btn-multi{width:100%;padding:clamp(8px,1.5vh,12px);background:#8b6914;border:none;border-radius:clamp(6px,1vw,10px);color:#fff;font-size:clamp(13px,2vw,16px);cursor:pointer;font-family:'KaiTi','STKaiti','DFKai-SB','Noto Serif TC',serif;transition:.2s;font-weight:700}
 .btn-multi:hover{background:#6b4f10}
@@ -462,6 +462,7 @@ async function _doSearch(){
   items.sort(function(a,b){return b.count-a.count});
   if(!items.length){document.getElementById('btnMultiShow').style.display='none';res.innerHTML='<div class="sr-empty">無匹配結果</div>';return}
   document.getElementById('btnMultiShow').style.display='block';
+  document.getElementById('btnMultiShow').textContent='合併展示所選';
   res.innerHTML=items.map(function(item){
     var tl=item.type==='name'?'捐贈人':'樂捐項目',tc=item.type==='name'?'name':'proj';
     return '<div class="sr-item"><input type="checkbox" class="sr-cb" data-type="'+item.type+'" data-key="'+escAttr(item.key)+'" data-label="'+escAttr(item.label)+'" onclick="updateMultiBtn()"><span class="sr-type '+tc+'">'+tl+'</span><span class="sr-txt" style="cursor:pointer" onclick="selectSearch(\''+item.type+'\',\''+escAttr(item.key)+'\',\''+escAttr(item.label)+'\')">'+esc(item.label)+'</span><span class="sr-count">'+item.count+'筆</span></div>';
