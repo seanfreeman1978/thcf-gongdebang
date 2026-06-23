@@ -398,13 +398,37 @@ ab.addEventListener('click',()=>{
 });
 
 // ===== 功德查询 =====
-let searchMode=null;
+var searchMode=null;
+
+// 繁→简字符映射（仅功德榜相关常用字）
+var _t2s=(function(){
+  var T='萬與習書買亂爭亞產親億僅從倉儀價眾優儲興冊農軍馮衝決凍淒鳳憑凱擊劃劉則剛創刪劑務動勵勞勢勛匯區醫華協單賣衛卻歷厲壓參雙叢號葉嘆嘩囑嚴國圍園圓圖團聖場塊塵墊壇壞壯處備復徹懷態憐懲戀戲戰戶啟掃掛採據擔擴擺數整斷無時晉曬書會條極構標樹機權歡歲殺氣為煙熱燈燒營愛獨獲獻現環瓊產當發監盤盧瞭碼礎禮籌糧紀約級純納組經結絕統絲鄉繼績續總縱糾練鑑義聯肅聲職聽腸膚膽臺舊與興艷節範築簡簽類養馬魚鳥鹹麥黃點黨龍門開關學傳醫養助教立基弘善難救老孤宗親文康';
+  var S='万与习书买乱争亚产亲亿仅从仓仪价众优储兴册农军冯冲决冻凄凤凭凯击划刘则刚创删剂务动励劳势勋汇区医华协单卖卫却历厉压参双丛号叶叹哗嘱严国围园圆图团圣场块尘垫坛坏壮处备复彻怀态怜惩恋戏战户启扫挂采据担扩摆数整断无时晋晒书会条极构标树机权欢岁杀气为烟热灯烧营爱独获献现环琼产当发监盘卢了码础礼筹粮纪约级纯纳组经结绝统丝乡继绩续总纵纠练鉴义联肃声职听肠肤胆台旧与兴艳节范筑简签类养马鱼鸟咸麦黄点党龙门开关学传医养助教立基弘善难救老孤宗亲文康';
+  var m={};
+  for(var i=0;i<T.length;i++) m[T[i]]=S[i];
+  return m;
+})();
+
+function toSimp(str){
+  var r='';
+  for(var i=0;i<str.length;i++){var c=str[i];r+=_t2s[c]||c}
+  return r;
+}
+
+function matchAny(src,qry){
+  if(!src||!qry) return false;
+  var ql=qry.toLowerCase();
+  return src.indexOf(qry)>=0||src.toLowerCase().indexOf(ql)>=0
+      ||toSimp(src).indexOf(toSimp(qry))>=0
+      ||toSimp(src).indexOf(qry)>=0
+      ||src.indexOf(toSimp(qry))>=0;
+}
 
 function openSearch(){
   document.getElementById('searchOverlay').classList.add('show');
   document.getElementById('srchInput').value='';
   document.getElementById('srchInput').focus();
-  document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';
+  document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢（支援繁簡體）</div>';
 }
 
 function closeSearch(){
@@ -420,19 +444,17 @@ function doSearch(){
 async function _doSearch(){
   var q=document.getElementById('srchInput').value.trim();
   var res=document.getElementById('searchResults');
-  if(!q){res.innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';return}
+  if(!q){res.innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢（支援繁簡體）</div>';return}
   var data=await loadData();
   if(!data.length){res.innerHTML='<div class="sr-empty">暫無數據，請先由後台導入</div>';return}
-  var ql=q.toLowerCase();
   var nameMap={},projMap={};
   data.forEach(function(d){
-    var nm=d.name;
-    if(nm.toLowerCase().indexOf(ql)>=0||nm.indexOf(q)>=0){
-      if(!nameMap[nm]) nameMap[nm]={name:nm,count:0};
-      nameMap[nm].count++;
+    if(matchAny(d.name,q)){
+      if(!nameMap[d.name]) nameMap[d.name]={name:d.name,count:0};
+      nameMap[d.name].count++;
     }
     var pj=d.project||'',pn=fmtProject(pj);
-    if(pj.toLowerCase().indexOf(ql)>=0||pj.indexOf(q)>=0||pn.toLowerCase().indexOf(ql)>=0||pn.indexOf(q)>=0){
+    if(matchAny(pj,q)||matchAny(pn,q)){
       if(!projMap[pj]) projMap[pj]={project:pj,count:0,displayName:pn};
       projMap[pj].count++;
     }
