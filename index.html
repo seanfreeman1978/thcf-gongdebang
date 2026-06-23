@@ -31,6 +31,28 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .audio-btn:hover{background:rgba(180,140,60,.5);border-color:rgba(220,190,100,.7)}
 
 /* 侧边按钮 */
+.query-btn{z-index:61;left:clamp(-10px,-0.7%,0px);top:24%;width:clamp(52px,18.6%,134px);height:clamp(36px,4.7%,92px);border-radius:8px;background:rgba(100,75,35,.4);border:2px solid rgba(200,170,90,.5);color:#e8d090;font-size:clamp(18px,3vw,26px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900;gap:clamp(2px,0.5vw,6px)}
+.query-btn:hover{background:rgba(160,120,50,.6);border-color:rgba(220,190,90,.7);color:#ffe8a0;box-shadow:0 0 14px rgba(200,160,50,.5)}
+.query-btn .ql{font-size:clamp(11px,1.8vw,15px);font-weight:400;letter-spacing:1px}
+/* 查询弹窗 */
+.search-overlay{position:fixed;inset:0;z-index:900;background:rgba(10,8,4,.88);backdrop-filter:blur(6px);display:none;flex-direction:column;align-items:center;padding-top:clamp(60px,12vh,120px)}
+.search-overlay.show{display:flex}
+.search-box{width:88%;max-width:520px;display:flex;flex-direction:column;gap:clamp(10px,2vh,16px)}
+.search-box .srch-input{width:100%;padding:clamp(12px,2vh,18px) 16px;border:2px solid rgba(200,170,90,.5);border-radius:clamp(8px,1.5vw,14px);background:rgba(30,22,10,.9);color:#e8d090;font-size:clamp(16px,2.5vw,22px);outline:none;font-family:'KaiTi','STKaiti','DFKai-SB','Noto Serif TC',serif;transition:.3s}
+.search-box .srch-input:focus{border-color:#ffd700;box-shadow:0 0 16px rgba(200,160,50,.3)}
+.search-box .srch-input::placeholder{color:rgba(200,170,120,.35)}
+.search-results{max-height:clamp(200px,50vh,460px);overflow-y:auto;border-radius:clamp(6px,1vw,10px);border:1px solid rgba(200,170,90,.25)}
+.search-results .sr-item{padding:clamp(10px,1.8vh,14px) 14px;border-bottom:1px solid rgba(200,170,90,.1);cursor:pointer;transition:.2s;display:flex;gap:10px;align-items:center}
+.search-results .sr-item:hover,.search-results .sr-item:active{background:rgba(200,160,50,.15)}
+.search-results .sr-item .sr-type{display:inline-block;padding:2px 8px;border-radius:10px;font-size:clamp(10px,1.6vw,12px);flex-shrink:0}
+.search-results .sr-item .sr-type.name{background:rgba(200,40,40,.25);color:#ff9090;border:1px solid rgba(200,40,40,.35)}
+.search-results .sr-item .sr-type.proj{background:rgba(50,100,210,.25);color:#90b4ff;border:1px solid rgba(50,100,210,.35)}
+.search-results .sr-item .sr-txt{color:#e8d090;font-size:clamp(13px,2vw,16px);flex:1}
+.search-results .sr-item .sr-count{color:rgba(200,170,120,.5);font-size:clamp(10px,1.5vw,13px);flex-shrink:0}
+.search-results .sr-empty{text-align:center;padding:30px 14px;color:rgba(200,170,120,.4);font-size:clamp(13px,2vw,16px)}
+.search-close{position:absolute;top:clamp(14px,3vh,28px);right:clamp(14px,3vw,28px);width:clamp(36px,6vw,48px);height:clamp(36px,6vw,48px);border-radius:50%;background:rgba(100,75,35,.35);border:2px solid rgba(200,170,90,.4);color:#e8d090;font-size:clamp(18px,3vw,26px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.search-close:hover{background:rgba(160,120,50,.5);color:#ffe8a0}
+/* 查询按钮 — 急难救助按钮上方 */
 .side-btn{z-index:60;width:clamp(52px,18.6%,134px);height:clamp(68px,8.87%,180px);border-radius:0;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,filter .3s}
 .side-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;border-radius:0;animation:plaqueGlow 2.4s ease-in-out infinite}
 .side-btn:hover{transform:scale(1.04)}
@@ -122,6 +144,10 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   <div class="pos-abs audio-btn" id="audioBtn" title="音樂開關">♪</div>
   <audio id="bgMusic" loop autoplay preload="auto"><source src="assets/bg-music.mp3" type="audio/mpeg"></audio>
 
+  <!-- 查询按钮 -->
+  <div class="pos-abs query-btn" onclick="openSearch()" title="功 德 查 詢">
+    <span class="ql">功德查詢</span>🔍</div>
+
   <!-- 左侧按钮：急難救助(红)、敬老撫孤(绿)、宗親文化(紫) -->
   <div class="pos-abs side-btn btn-l1" style="--gc:rgba(200,40,40,.45)" onclick="switchCat('急難救助',this)">
     <img src="assets/btn-emergency.png" alt="急難救助"></div>
@@ -167,6 +193,15 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 
   <!-- 底部 -->
   <div class="pos-abs bottom-info" id="bottomInfo"></div>
+
+  <!-- 查询弹窗 -->
+  <div class="search-overlay" id="searchOverlay">
+    <button class="search-close" onclick="closeSearch()">✕</button>
+    <div class="search-box">
+      <input class="srch-input" id="srchInput" type="text" placeholder="輸入姓名或樂捐項目關鍵詞查詢…" oninput="doSearch()">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
 
 </div>
 </div>
@@ -357,6 +392,167 @@ ab.addEventListener('click',()=>{
   if(audOn){bgm.pause();ab.textContent='✕'}else{bgm.play().catch(()=>{});ab.textContent='♪'}
   audOn=!audOn;
 });
+
+// ===== 功德查询 =====
+let searchMode=null; // null | {type:'name'|'project', term:string, label:string}
+
+function openSearch(){
+  document.getElementById('searchOverlay').classList.add('show');
+  document.getElementById('srchInput').value='';
+  document.getElementById('srchInput').focus();
+  document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';
+}
+
+function closeSearch(){
+  document.getElementById('searchOverlay').classList.remove('show');
+}
+
+// 输入防抖
+let _srchTimer=null;
+function doSearch(){
+  clearTimeout(_srchTimer);
+  _srchTimer=setTimeout(_doSearch,250);
+}
+
+async function _doSearch(){
+  const q=document.getElementById('srchInput').value.trim().toLowerCase();
+  const res=document.getElementById('searchResults');
+  if(!q){res.innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';return}
+
+  const data=await loadData();
+  if(!data.length){res.innerHTML='<div class="sr-empty">暫無數據</div>';return}
+
+  // 姓名匹配
+  const nameMap=new Map();
+  const projMap=new Map();
+  data.forEach(d=>{
+    const nm=d.name;
+    if(nm.toLowerCase().includes(q)){
+      if(!nameMap.has(nm)) nameMap.set(nm,{name:nm,count:0});
+      nameMap.get(nm).count++;
+    }
+    const pj=d.project||'';
+    const pjName=fmtProject(pj);
+    if(pj.toLowerCase().includes(q)||pjName.toLowerCase().includes(q)){
+      if(!projMap.has(pj)) projMap.set(pj,{project:pj,count:0,displayName:pjName});
+      projMap.get(pj).count++;
+    }
+  });
+
+  const items=[];
+  for(const v of nameMap.values()) items.push({type:'name',label:v.name,count:v.count,key:v.name});
+  for(const v of projMap.values()) items.push({type:'project',label:v.displayName||v.project,count:v.count,key:v.project});
+  items.sort((a,b)=>b.count-a.count);
+
+  if(!items.length){res.innerHTML='<div class="sr-empty">無匹配結果</div>';return}
+
+  res.innerHTML=items.map((item,i)=>{
+    const typeLabel=item.type==='name'?'捐贈人':'樂捐項目';
+    const typeCls=item.type==='name'?'name':'proj';
+    return `<div class="sr-item" onclick="selectSearch('${item.type}','${escAttr(item.key)}','${escAttr(item.label)}')">
+      <span class="sr-type ${typeCls}">${typeLabel}</span>
+      <span class="sr-txt">${esc(item.label)}</span>
+      <span class="sr-count">${item.count} 筆</span>
+    </div>`;
+  }).join('');
+}
+
+function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"')}
+
+function selectSearch(type,key,label){
+  closeSearch();
+  document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
+  searchMode={type,key,label};
+  renderSearchResults(type,key,label);
+}
+
+async function renderSearchResults(type,key,label){
+  const track=document.getElementById('scrollTrack');
+  const mask=document.getElementById('maskTop');
+  const data=await loadData();
+
+  let items;
+  if(type==='name'){
+    items=data.filter(d=>d.name===key);
+  }else{
+    items=data.filter(d=>d.project===key||fmtProject(d.project)===key);
+  }
+  items.sort((a,b)=>a.date.localeCompare(b.date));
+
+  const sa=document.getElementById('scrollArea');
+  const saH=sa.clientHeight;
+  const estEntryH=60;
+  const estTitleH=44;
+  const estTotal=estTitleH+items.length*estEntryH;
+  const needsScroll=estTotal>saH;
+
+  let renderItems;
+  if(needsScroll){
+    renderItems=items.length<=2
+      ?[...items,{_sep:1},...items,{_sep:1},...items]
+      :[...items,...items];
+  }else{
+    renderItems=[...items];
+  }
+
+  track.innerHTML='';
+
+  // 标题
+  const h=document.createElement('div');
+  h.className='entry';
+  h.innerHTML=`<div style="text-align:center;font-size:clamp(16px,2.8vw,24px);color:#b84040;font-weight:900;padding:3px 0">🔍 ${esc(label)} <span style="font-size:0.7em;color:#999">(${items.length}筆)</span></div>`;
+  track.appendChild(h);
+  mask.style.height='18%';
+
+  renderItems.forEach(d=>{
+    if(d._sep){const se=document.createElement('div');se.className='entry';se.style.border='none';se.innerHTML='<div style="height:clamp(12px,2.5vw,20px)"></div>';track.appendChild(se);return}
+    const e=document.createElement('div');
+    e.className='entry';
+    const hi=d.amount>=100000;
+    const tyCls=d.type==="物資"?"tyWz":"tySk";
+    const catC=CAT_COLORS[d.category]||'#555';
+    const nm=d.name,pn=fmtProject(d.project||'');
+    const dot=pn.indexOf('·');
+    const pnFirst=dot>0?pn.substring(0,dot):pn;
+    const pnRest=dot>0?pn.substring(dot):'';
+    e.innerHTML=`
+      <div class="entry-row">
+        <div class="entry-left"><span class="name"><span class="marq">${nm}</span></span>${d.title?`<span class="title"><span class="marq">${d.title}</span></span>`:''}</div>
+        <div class="entry-right"><span class="amount">${d.type==="物資"?`<span class="wz-label">物資價值</span>`:''}<span${hi?' class="hl"':''}>${d.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span> <i>銖</i></span></div>
+      </div>
+      <div class="proj"><span class="pre">樂捐·</span><span class="${tyCls}">${d.type||'善款'}·</span><span class="pn"><span class="marq"><span style="color:${catC}">${pnFirst}</span><span style="color:#555">${pnRest}</span></span></span><span class="date">${d.date}</span></div>`;
+    track.appendChild(e);
+  });
+
+  setTimeout(()=>{
+    track.querySelectorAll('.marq').forEach(s=>{
+      const pw=s.parentElement;
+      if(!pw) return;
+      if(s.scrollWidth>pw.clientWidth+3){
+        const hh=s.innerHTML;
+        s.classList.add('go');
+        s.innerHTML=hh+'&emsp;&emsp;'+hh;
+      }
+    });
+  },200);
+
+  track.style.animation='';
+  track.style.padding='';
+  if(needsScroll){
+    const spd=Math.max(8,items.length*2.5);
+    track.style.setProperty('--spd',spd+'s');
+  }else{
+    track.style.animation='none';
+    track.style.padding='0';
+  }
+}
+
+// 修改 backToAll 以清除搜索状态
+const _origBackToAll=backToAll;
+backToAll=function(){
+  searchMode=null;
+  _origBackToAll();
+};
 
 // 烟雾 — 简明白雾柱
 (function(){
