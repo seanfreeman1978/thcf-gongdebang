@@ -26,8 +26,8 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .scene>img.bg{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .pos-abs{position:absolute}
 
-/* 音频 */
-.audio-btn{z-index:80;right:1.5%;top:.8%;width:clamp(44px,8.4%,68px);aspect-ratio:1.25;height:auto;border-radius:8px;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(18px,2.8vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
+/* 音频 — 圆形按钮 */
+.audio-btn{z-index:80;right:1.5%;top:.8%;width:clamp(44px,8.4%,68px);aspect-ratio:1;height:auto;border-radius:50%;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(18px,2.8vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
 .audio-btn:hover{background:rgba(180,140,60,.5);border-color:rgba(220,190,100,.7)}
 
 /* 侧边按钮 */
@@ -95,16 +95,16 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   100%{bottom:95%;opacity:0;transform:translateX(calc(var(--sw,0)*15px)) scaleY(3.5)}
 }
 
-/* 复制账号 */
-.copy-btn{z-index:70;left:63.11%;top:80.05%;width:clamp(22px,4.2%,34px);aspect-ratio:1.25;height:auto;border-radius:6px;background:rgba(120,100,50,.35);border:2px solid rgba(200,170,90,.55);color:#e8d090;font-size:clamp(10px,1.6vw,14px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
-.copy-btn:hover{background:rgba(180,140,60,.5);border-color:rgba(220,190,100,.7)}
-.copy-btn.ok{background:rgba(80,160,80,.4);border-color:rgba(100,180,100,.55)}
+/* 复制账号 — 无外框透明按钮 */
+.copy-btn{z-index:70;left:63.11%;top:80.05%;width:clamp(22px,4.2%,34px);aspect-ratio:1.25;height:auto;border-radius:6px;background:transparent;border:none;color:#c8a050;font-size:clamp(10px,1.6vw,14px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:900}
+.copy-btn:hover{color:#ffe8a0;transform:scale(1.15)}
+.copy-btn.ok{color:#4ade80}
 
 /* 底部信息 */
 .bottom-info{z-index:20;left:0;right:0;bottom:0;height:14%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:.8%;pointer-events:none}
 
 /* 善缘账户铜板 —— 精密贴合BG铜框 */
-.acct-panel{z-index:35;left:50%;transform:translateX(-50%);top:74.8%;width:56.8%;pointer-events:none;text-align:center;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;word-break:normal;overflow-wrap:break-word;background:linear-gradient(180deg,rgba(100,65,25,.12) 0%,rgba(70,40,15,.07) 100%);border:1px solid rgba(150,105,35,.22);border-radius:clamp(3px,.8vw,6px);padding:clamp(1px,.4vw,5px) clamp(4px,1vw,10px);box-sizing:border-box}
+.acct-panel{z-index:35;left:50%;transform:translateX(-50%);top:75.8%;width:56.8%;pointer-events:none;text-align:center;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','AR PL UKai CN','Noto Serif TC',serif;word-break:normal;overflow-wrap:break-word;background:linear-gradient(180deg,rgba(100,65,25,.12) 0%,rgba(70,40,15,.07) 100%);border:1px solid rgba(150,105,35,.22);border-radius:clamp(3px,.8vw,6px);padding:clamp(1px,.4vw,5px) clamp(4px,1vw,10px);box-sizing:border-box}
 .acct-panel .acct-title{font-size:clamp(11px,2.3vw,17px);font-weight:900;color:#111;letter-spacing:clamp(1px,.35vw,2.5px);margin-bottom:0;white-space:nowrap}
 .acct-panel .acct-body{font-size:clamp(8.5px,1.8vw,14px);color:#111;line-height:1.1;font-weight:700;white-space:normal;font-family:'KaiTi','STKaiti','DFKai-SB','標楷體','Noto Serif TC','Arial Narrow','Helvetica Narrow',sans-serif}
 .acct-panel .acct-body .en{font-family:'Arial Narrow','Helvetica Narrow',Arial,sans-serif;font-size:0.9em;letter-spacing:-0.3px}
