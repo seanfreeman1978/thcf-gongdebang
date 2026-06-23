@@ -256,6 +256,7 @@ let curCat="全部";
 
 function fmtProject(proj){return proj.replace(/\//g,'·')}
 function getCat(proj){const p1=proj.substring(0,1);for(const c of CATS)if(c.substring(0,1)===p1)return c;return proj}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 async function renderList(cat){
   const track=document.getElementById('scrollTrack');
@@ -398,70 +399,52 @@ ab.addEventListener('click',()=>{
 // ===== 功德查询 =====
 let searchMode=null;
 
-// 精简繁简转换 — 仅覆盖功德榜数据中出现的常用字
-(function(){
-  const T='萬與習書買亂爭亞產親億僅從倉儀價眾優儲兒兩興冊農軍馮衝決況凍淒減幾鳳憑凱擊劃劉則剛創刪劍劑務動勵勁勞勢勛匯區醫華協單賣衛卻歷厲壓厭參雙叢號葉嘆嘩囑嚴國圍園圓圖團聖場塊塵墊墾壇壞壟壯處備復徹懷態憐懲懸戀戲戰戶啟掃掛採據擔擴擺攝敵數整斷無時晉曬書會條極構標樹機權歎歡歲歷歸殺氣氫決沒況為烏無煙熱燈燒營爆愛爾牆獨獲獻現環瓊產當癒發監盤盧眾瞭碼礎禮禱籌糧紀約級純納組經結絕統絲鄉繼績續總縱繁糾練鑑義聯肅聲職聽腸膚膽臺舊與興艷節範築簡籌簽類養馬魚鳥鹹麥黃麵點黨龍門開關學傳醫養助教立基弘善難救老孤宗親文康';
-  const S='万与习书买乱争亚产亲亿仅从仓仪价众优储儿两兴册农军冯冲决况冻凄减几凤凭凯击划刘则刚创删剑剂务动励劲劳势勋汇区医华协单卖卫却历厉压厌参双丛号叶叹哗嘱严国围园圆图团圣场块尘垫垦坛坏垄壮处备复彻怀态怜惩悬恋戏战户启扫挂采据担扩摆摄敌数整断无时晋晒书会条极构标树机权叹欢岁历归杀气氢决没况为乌无烟热灯烧营爆爱尔墙独获献现环琼产当愈发监盘卢众了码础礼祷筹粮纪约级纯纳组经结绝统丝乡继绩续总纵繁纠练鉴义联肃声职听肠肤胆台旧与兴艳节范筑简筹签类养马鱼鸟咸麦黄面点党龙门开关学传医养助教立基弘善难救老孤宗亲文康';
-  this._t2s={};
-  for(let i=0;i<T.length;i++) this._t2s[T[i]]=S[i];
-})();
-
-function normHan(s){
-  try{let r='';for(let i=0;i<s.length;i++){const c=s[i];r+=_t2s[c]||c}return r}catch(e){return s}
-}
-
-function fuzzyMatch(haystack,needle){
-  try{
-    if(!haystack||!needle) return false;
-    if(haystack.indexOf(needle)>=0) return true;
-    const hn=normHan(haystack),nn=normHan(needle);
-    if(hn!==haystack&&hn.indexOf(needle)>=0) return true;
-    if(nn!==needle&&haystack.indexOf(nn)>=0) return true;
-    if(hn!==haystack&&nn!==needle&&hn.indexOf(nn)>=0) return true;
-    return false;
-  }catch(e){return (haystack||'').indexOf(needle||'')>=0}
-}
-
 function openSearch(){
   document.getElementById('searchOverlay').classList.add('show');
   document.getElementById('srchInput').value='';
   document.getElementById('srchInput').focus();
-  document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢（支援繁簡體）</div>';
+  document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';
 }
 
 function closeSearch(){
   document.getElementById('searchOverlay').classList.remove('show');
 }
 
-let _srchTimer=null;
+var _srchTimer=null;
 function doSearch(){
   clearTimeout(_srchTimer);
-  _srchTimer=setTimeout(_doSearch,200);
+  _srchTimer=setTimeout(_doSearch,250);
 }
 
 async function _doSearch(){
-  try{
-    const q=document.getElementById('srchInput').value.trim();
-    const res=document.getElementById('searchResults');
-    if(!q){res.innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢（支援繁簡體）</div>';return}
-    const data=await loadData();
-    if(!data.length){res.innerHTML='<div class="sr-empty">暫無數據，請先由後台導入數據</div>';return}
-    const nameMap=new Map(),projMap=new Map();
-    data.forEach(d=>{
-      if(fuzzyMatch(d.name,q)){const k=d.name;if(!nameMap.has(k))nameMap.set(k,{name:k,count:0});nameMap.get(k).count++}
-      const pj=d.project||'',pn=fmtProject(pj);
-      if(fuzzyMatch(pj,q)||fuzzyMatch(pn,q)){if(!projMap.has(pj))projMap.set(pj,{project:pj,count:0,displayName:pn});projMap.get(pj).count++}
-    });
-    const items=[];
-    for(const v of nameMap.values()) items.push({type:'name',label:v.name,count:v.count,key:v.name});
-    for(const v of projMap.values()) items.push({type:'project',label:v.displayName||v.project,count:v.count,key:v.project});
-    items.sort((a,b)=>b.count-a.count);
-    if(!items.length){res.innerHTML='<div class="sr-empty">無匹配結果<small style="display:block;font-size:0.8em">試試其他關鍵詞（支援繁簡體）</small></div>';return}
-    res.innerHTML=items.map(item=>{
-      const tl=item.type==='name'?'捐贈人':'樂捐項目',tc=item.type==='name'?'name':'proj';
-      return `<div class="sr-item" onclick="selectSearch('${item.type}','${escAttr(item.key)}','${escAttr(item.label)}')"><span class="sr-type ${tc}">${tl}</span><span class="sr-txt">${esc(item.label)}</span><span class="sr-count">${item.count}筆</span></div>`;
-    }).join('');
-  }catch(err){document.getElementById('searchResults').innerHTML='<div class="sr-empty">查詢異常，請重試</div>';console.error('search error:',err)}
+  var q=document.getElementById('srchInput').value.trim();
+  var res=document.getElementById('searchResults');
+  if(!q){res.innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';return}
+  var data=await loadData();
+  if(!data.length){res.innerHTML='<div class="sr-empty">暫無數據，請先由後台導入</div>';return}
+  var ql=q.toLowerCase();
+  var nameMap={},projMap={};
+  data.forEach(function(d){
+    var nm=d.name;
+    if(nm.toLowerCase().indexOf(ql)>=0||nm.indexOf(q)>=0){
+      if(!nameMap[nm]) nameMap[nm]={name:nm,count:0};
+      nameMap[nm].count++;
+    }
+    var pj=d.project||'',pn=fmtProject(pj);
+    if(pj.toLowerCase().indexOf(ql)>=0||pj.indexOf(q)>=0||pn.toLowerCase().indexOf(ql)>=0||pn.indexOf(q)>=0){
+      if(!projMap[pj]) projMap[pj]={project:pj,count:0,displayName:pn};
+      projMap[pj].count++;
+    }
+  });
+  var items=[];
+  for(var k in nameMap) items.push({type:'name',label:nameMap[k].name,count:nameMap[k].count,key:nameMap[k].name});
+  for(var k in projMap) items.push({type:'project',label:projMap[k].displayName||projMap[k].project,count:projMap[k].count,key:projMap[k].project});
+  items.sort(function(a,b){return b.count-a.count});
+  if(!items.length){res.innerHTML='<div class="sr-empty">無匹配結果</div>';return}
+  res.innerHTML=items.map(function(item){
+    var tl=item.type==='name'?'捐贈人':'樂捐項目',tc=item.type==='name'?'name':'proj';
+    return '<div class="sr-item" onclick="selectSearch(\''+item.type+'\',\''+escAttr(item.key)+'\',\''+escAttr(item.label)+'\')"><span class="sr-type '+tc+'">'+tl+'</span><span class="sr-txt">'+esc(item.label)+'</span><span class="sr-count">'+item.count+'筆</span></div>';
+  }).join('');
 }
 
 function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"')}
