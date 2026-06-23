@@ -51,6 +51,9 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .search-results .sr-empty{text-align:center;padding:30px 14px;color:rgba(200,170,120,.4);font-size:clamp(13px,2vw,16px)}
 .search-close{position:absolute;top:clamp(14px,3vh,28px);right:clamp(14px,3vw,28px);width:clamp(36px,6vw,48px);height:clamp(36px,6vw,48px);border-radius:50%;background:rgba(100,75,35,.35);border:2px solid rgba(200,170,90,.4);color:#e8d090;font-size:clamp(18px,3vw,26px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
 .search-close:hover{background:rgba(160,120,50,.5);color:#ffe8a0}
+.sr-cb{width:clamp(16px,2.5vw,20px);height:clamp(16px,2.5vw,20px);accent-color:#c8a050;flex-shrink:0;cursor:pointer}
+.btn-multi{width:100%;padding:clamp(8px,1.5vh,12px);background:rgba(200,160,50,.25);border:1px solid rgba(200,160,50,.4);border-radius:clamp(6px,1vw,10px);color:#e8d090;font-size:clamp(13px,2vw,16px);cursor:pointer;font-family:'KaiTi','STKaiti','DFKai-SB','Noto Serif TC',serif;transition:.2s}
+.btn-multi:hover{background:rgba(200,160,50,.4);color:#ffe8a0}
 /* 查询按钮 — 急难救助按钮上方 */
 .side-btn{z-index:60;width:clamp(52px,18.6%,134px);height:clamp(68px,8.87%,180px);border-radius:0;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,filter .3s}
 .side-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;border-radius:0;animation:plaqueGlow 2.4s ease-in-out infinite}
@@ -140,11 +143,11 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
   <img class="bg" src="assets/bg.jpg" alt="">
 
   <!-- 音频 -->
-  <div class="pos-abs audio-btn" id="audioBtn" title="音樂開關">♪</div>
+  <div class="pos-abs audio-btn" id="audioBtn" title="音樂開關">▶</div>
   <audio id="bgMusic" loop autoplay preload="auto"><source src="assets/bg-music.mp3" type="audio/mpeg"></audio>
 
   <!-- 查询按钮 -->
-  <div class="pos-abs query-btn" onclick="openSearch()" title="功德查詢">🔍</div>
+  <div class="pos-abs query-btn" onclick="openSearch()" title="功德查詢">◎</div>
 
   <!-- 左侧按钮：急難救助(红)、敬老撫孤(绿)、宗親文化(紫) -->
   <div class="pos-abs side-btn btn-l1" style="--gc:rgba(200,40,40,.45)" onclick="switchCat('急難救助',this)">
@@ -198,6 +201,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
     <div class="search-box">
       <input class="srch-input" id="srchInput" type="text" placeholder="輸入姓名或樂捐項目關鍵詞查詢…" oninput="doSearch()">
       <div class="search-results" id="searchResults"></div>
+      <button class="btn-multi" id="btnMultiShow" style="display:none" onclick="showMultiResults()">合併展示所選</button>
     </div>
   </div>
 
@@ -381,9 +385,9 @@ bgm.volume=0.25;
 let audOn=true;
 // 手机浏览器拦截autoplay → 首次触摸时恢复
 bgm.play().catch(()=>{
-  audOn=false; ab.textContent='✕';
+  audOn=false; ab.textContent='▶';
   const resume=()=>{
-    bgm.play().then(()=>{audOn=true;ab.textContent='♪'}).catch(()=>{});
+    bgm.play().then(()=>{audOn=true;ab.textContent='⏸'}).catch(()=>{});
     document.removeEventListener('click',resume);
     document.removeEventListener('touchstart',resume);
   };
@@ -391,7 +395,7 @@ bgm.play().catch(()=>{
   document.addEventListener('touchstart',resume,{once:true});
 });
 ab.addEventListener('click',()=>{
-  if(audOn){bgm.pause();ab.textContent='✕'}else{bgm.play().catch(()=>{});ab.textContent='♪'}
+  if(audOn){bgm.pause();ab.textContent='▶'}else{bgm.play().catch(()=>{});ab.textContent='⏸'}
   audOn=!audOn;
 });
 
@@ -461,11 +465,68 @@ async function _doSearch(){
   for(var k in nameMap) items.push({type:'name',label:nameMap[k].name,count:nameMap[k].count,key:nameMap[k].name});
   for(var k in projMap) items.push({type:'project',label:projMap[k].displayName||projMap[k].project,count:projMap[k].count,key:projMap[k].project});
   items.sort(function(a,b){return b.count-a.count});
-  if(!items.length){res.innerHTML='<div class="sr-empty">無匹配結果</div>';return}
+  if(!items.length){document.getElementById('btnMultiShow').style.display='none';res.innerHTML='<div class="sr-empty">無匹配結果</div>';return}
+  document.getElementById('btnMultiShow').style.display='block';
   res.innerHTML=items.map(function(item){
     var tl=item.type==='name'?'捐贈人':'樂捐項目',tc=item.type==='name'?'name':'proj';
-    return '<div class="sr-item" onclick="selectSearch(\''+item.type+'\',\''+escAttr(item.key)+'\',\''+escAttr(item.label)+'\')"><span class="sr-type '+tc+'">'+tl+'</span><span class="sr-txt">'+esc(item.label)+'</span><span class="sr-count">'+item.count+'筆</span></div>';
+    return '<div class="sr-item"><input type="checkbox" class="sr-cb" data-type="'+item.type+'" data-key="'+escAttr(item.key)+'" data-label="'+escAttr(item.label)+'" onclick="updateMultiBtn()"><span class="sr-type '+tc+'">'+tl+'</span><span class="sr-txt" style="cursor:pointer" onclick="selectSearch(\''+item.type+'\',\''+escAttr(item.key)+'\',\''+escAttr(item.label)+'\')">'+esc(item.label)+'</span><span class="sr-count">'+item.count+'筆</span></div>';
   }).join('');
+}
+
+var _selItems=[];
+function updateMultiBtn(){
+  var cbs=document.querySelectorAll('.sr-cb:checked');
+  document.getElementById('btnMultiShow').textContent='合併展示所選（'+cbs.length+'項）';
+}
+
+async function showMultiResults(){
+  var cbs=document.querySelectorAll('.sr-cb:checked');
+  if(!cbs.length){alert('請先勾選查詢結果');return}
+  closeSearch();
+  document.querySelectorAll('.side-btn').forEach(function(b){b.classList.remove('active')});
+  var selections=[];
+  cbs.forEach(function(cb){selections.push({type:cb.dataset.type,key:cb.dataset.key,label:cb.dataset.label})});
+  searchMode={type:'multi',selections:selections};
+  
+  var track=document.getElementById('scrollTrack');
+  var mask=document.getElementById('maskTop');
+  var data=await loadData();
+  var allItems=[],labels=[];
+  selections.forEach(function(sel){
+    labels.push(sel.label);
+    if(sel.type==='name'){
+      allItems=allItems.concat(data.filter(function(d){return d.name===sel.key}));
+    }else{
+      allItems=allItems.concat(data.filter(function(d){return d.project===sel.key||fmtProject(d.project)===sel.key}));
+    }
+  });
+  // 去重
+  var seen={};
+  allItems=allItems.filter(function(d){var k=d._id;if(seen[k])return false;seen[k]=true;return true});
+  allItems.sort(function(a,b){return a.date.localeCompare(b.date)});
+  
+  var sa=document.getElementById('scrollArea');
+  var saH=sa.clientHeight,estEntryH=60,estTitleH=44;
+  var needsScroll=estTitleH+allItems.length*estEntryH>saH;
+  var renderItems=needsScroll?(allItems.length<=2?[].concat(allItems,[{_sep:1}],allItems,[{_sep:1}],allItems):[].concat(allItems,allItems)):[].concat(allItems);
+  
+  track.innerHTML='';
+  var h=document.createElement('div');h.className='entry';
+  h.innerHTML='<div style="text-align:center;font-size:clamp(15px,2.6vw,22px);color:#111;font-weight:900;padding:3px 0">◎ '+labels.join(' + ')+' <span style="font-size:0.7em;color:#999">('+allItems.length+'筆)</span></div>';
+  track.appendChild(h);mask.style.height='18%';
+  
+  renderItems.forEach(function(d){
+    if(d._sep){var se=document.createElement('div');se.className='entry';se.style.border='none';se.innerHTML='<div style=\"height:clamp(12px,2.5vw,20px)\"></div>';track.appendChild(se);return}
+    var e=document.createElement('div');e.className='entry';
+    var hi=d.amount>=100000,tyCls=d.type==='物資'?'tyWz':'tySk';
+    var catC=CAT_COLORS[d.category]||'#555',nm=d.name,pn=fmtProject(d.project||'');
+    var dot=pn.indexOf('·'),pnFirst=dot>0?pn.substring(0,dot):pn,pnRest=dot>0?pn.substring(dot):'';
+    e.innerHTML='<div class=\"entry-row\"><div class=\"entry-left\"><span class=\"name\"><span class=\"marq\">'+esc(nm)+'</span></span>'+(d.title?'<span class=\"title\"><span class=\"marq\">'+esc(d.title)+'</span></span>':'')+'</div><div class=\"entry-right\"><span class=\"amount\">'+(d.type==='物資'?'<span class=\"wz-label\">物資價值</span>':'')+'<span'+(hi?' class=\"hl\"':'')+'>'+d.amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</span> <i>銖</i></span></div></div><div class=\"proj\"><span class=\"pre\">樂捐·</span><span class=\"'+tyCls+'\">'+(d.type||'善款')+'·</span><span class=\"pn\"><span class=\"marq\"><span style=\"color:'+catC+'\">'+esc(pnFirst)+'</span><span style=\"color:#555\">'+esc(pnRest)+'</span></span></span><span class=\"date\">'+d.date+'</span></div>';
+    track.appendChild(e);
+  });
+  setTimeout(function(){track.querySelectorAll('.marq').forEach(function(s){var pw=s.parentElement;if(!pw)return;if(s.scrollWidth>pw.clientWidth+3){var hh=s.innerHTML;s.classList.add('go');s.innerHTML=hh+'&emsp;&emsp;'+hh}})},200);
+  track.style.animation='';track.style.padding='';
+  if(needsScroll){track.style.setProperty('--spd',Math.max(8,allItems.length*2.5)+'s')}else{track.style.animation='none';track.style.padding='0'}
 }
 
 function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"')}
@@ -511,7 +572,7 @@ async function renderSearchResults(type,key,label){
   // 标题
   const h=document.createElement('div');
   h.className='entry';
-  h.innerHTML=`<div style="text-align:center;font-size:clamp(16px,2.8vw,24px);color:#b84040;font-weight:900;padding:3px 0">🔍 ${esc(label)} <span style="font-size:0.7em;color:#999">(${items.length}筆)</span></div>`;
+  h.innerHTML=`<div style="text-align:center;font-size:clamp(16px,2.8vw,24px);color:#111;font-weight:900;padding:3px 0">◎ ${esc(label)} <span style="font-size:0.7em;color:#999">(${items.length}筆)</span></div>`;
   track.appendChild(h);
   mask.style.height='18%';
 
