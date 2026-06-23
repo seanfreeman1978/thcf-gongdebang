@@ -261,14 +261,16 @@ async function renderList(cat){
   const track=document.getElementById('scrollTrack');
   const mask=document.getElementById('maskTop');
   let data=await loadData();
-  // 首次加载时种子数据
+  // 首次加载时种子数据 — 必须等待写入完成
   if(data.length===0){
     data=SEED;
-    // 存入 IndexedDB
-    const db=await openIDB();
-    const tx=db.transaction(STORE_NAME,'readwrite');
-    const store=tx.objectStore(STORE_NAME);
-    SEED.forEach(d=>store.add(d));
+    await new Promise((resolve,reject)=>{
+      const tx=(await openIDB()).transaction(STORE_NAME,'readwrite');
+      const store=tx.objectStore(STORE_NAME);
+      SEED.forEach(d=>store.add(d));
+      tx.oncomplete=resolve;
+      tx.onerror=reject;
+    });
   }
   const items=data.filter(d=>cat==="全部"?true:getCat(d.project)===cat);
   items.sort((a,b)=>a.date.localeCompare(b.date));
@@ -394,46 +396,76 @@ ab.addEventListener('click',()=>{
 });
 
 // ===== 功德查询 =====
-let searchMode=null; // null | {type:'name'|'project', term:string, label:string}
+let searchMode=null;
+
+// 繁简双向归一化 — 将常用异体字符转为统一形式用于搜索
+(function(){const m={萬:'万',與:'与',習:'习',書:'书',買:'买',亂:'乱',爭:'争',亞:'亚',產:'产',親:'亲',億:'亿',僅:'仅',僕:'仆',從:'从',倉:'仓',儀:'仪',價:'价',眾:'众',優:'优',儲:'储',兒:'儿',兔:'兔',兩:'两',興:'兴',冊:'册',農:'农',軍:'军',馮:'冯',衝:'冲',決:'决',況:'况',凍:'冻',淒:'凄',減:'减',幾:'几',鳳:'凤',憑:'凭',凱:'凯',擊:'击',鑿:'凿',劃:'划',劉:'刘',則:'则',剛:'刚',創:'创',刪:'删',劉:'刘',劍:'剑',劑:'剂',力:'力',務:'务',動:'动',務:'务',勵:'励',勁:'劲',勞:'劳',勢:'势',勛:'勋',匯:'汇',匱:'匮',區:'区',醫:'医',華:'华',協:'协',單:'单',賣:'卖',衛:'卫',卻:'却',歷:'历',厲:'厉',壓:'压',厭:'厌',參:'参',雙:'双',叢:'丛',口:'口',只:'只',召:'召',可:'可',號:'号',葉:'叶',嘆:'叹',嘩:'哗',囑:'嘱',嚴:'严',四:'四',回:'回',國:'国',圍:'围',園:'园',圓:'圆',圖:'图',團:'团',聖:'圣',場:'场',塊:'块',塵:'尘',墊:'垫',墾:'垦',壇:'坛',壓:'压',壞:'坏',壟:'垄',壯:'壮',處:'处',備:'备',復:'复',徹:'彻',懷:'怀',態:'态',憐:'怜',憑:'凭',懲:'惩',懸:'悬',戀:'恋',戲:'戏',戰:'战',戶:'户',啟:'启',掃:'扫',掛:'挂',採:'采',據:'据',擊:'击',擔:'担',擴:'扩',擺:'摆',攝:'摄',支:'支',收:'收',效:'效',敵:'敌',數:'数',整:'整',斷:'断',無:'无',時:'时',晉:'晋',曬:'晒',書:'书',會:'会',條:'条',極:'极',構:'构',標:'标',樹:'树',機:'机',權:'权',歎:'叹',歡:'欢',歲:'岁',歷:'历',歸:'归',殺:'杀',氣:'气',氫:'氢',決:'决',沒:'没',況:'况',法:'法',波:'波',注:'注',測:'测',準:'准',為:'为',烏:'乌',無:'无',煙:'烟',熱:'热',燈:'灯',燒:'烧',營:'营',爆:'爆',愛:'爱',爾:'尔',牆:'墙',獨:'独',獲:'获',獻:'献',現:'现',環:'环',瓊:'琼',產:'产',當:'当',癒:'愈',發:'发',監:'监',盤:'盘',盧:'卢',眾:'众',瞭:'了',碼:'码',礎:'础',禮:'礼',禱:'祷',籌:'筹',糧:'粮',紀:'纪',約:'约',級:'级',純:'纯',納:'纳',組:'组',經:'经',結:'结',絕:'绝',統:'统',絲:'丝',鄉:'乡',繼:'继',績:'绩',續:'续',總:'总',縱:'纵',繁:'繁',糾:'纠',練:'练',鑑:'鉴',義:'义',習:'习',聯:'联',肅:'肃',聖:'圣',聲:'声',職:'职',聽:'听',腸:'肠',膚:'肤',膽:'胆',臺:'台',舊:'旧',與:'与',興:'兴',艷:'艳',節:'节',範:'范',築:'筑',簡:'简',籌:'筹',簽:'签',類:'类',養:'养',馬:'马',魚:'鱼',鳥:'鸟',鹹:'咸',麥:'麦',黃:'黄',麵:'面',點:'点',黨:'党',龍:'龙'};this._s2t={};for(const[k,v] of Object.entries(m)){this._s2t[v]=k}this._t2s=m})()
+
+function normHan(s){
+  let r='';
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    r+=_t2s[c]||c;
+  }
+  return r;
+}
+
+function matchHan(haystack,needle){
+  // 四路匹配: 原文↔原文 | 原文↔归一化 | 归一化↔原文 | 归一化↔归一化
+  if(haystack.includes(needle)) return true;
+  const hNorm=normHan(haystack),nNorm=normHan(needle);
+  if(hNorm!==haystack&&hNorm.includes(needle)) return true;
+  if(nNorm!==needle&&haystack.includes(nNorm)) return true;
+  if(hNorm!==haystack&&nNorm!==needle&&hNorm.includes(nNorm)) return true;
+  return false;
+}
 
 function openSearch(){
   document.getElementById('searchOverlay').classList.add('show');
   document.getElementById('srchInput').value='';
   document.getElementById('srchInput').focus();
-  document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';
+  document.getElementById('searchResults').innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢（支援繁簡體）</div>';
 }
 
 function closeSearch(){
   document.getElementById('searchOverlay').classList.remove('show');
 }
 
-// 输入防抖
 let _srchTimer=null;
 function doSearch(){
   clearTimeout(_srchTimer);
-  _srchTimer=setTimeout(_doSearch,250);
+  _srchTimer=setTimeout(_doSearch,200);
 }
 
 async function _doSearch(){
-  const q=document.getElementById('srchInput').value.trim().toLowerCase();
+  const q=document.getElementById('srchInput').value.trim();
   const res=document.getElementById('searchResults');
-  if(!q){res.innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢</div>';return}
+  if(!q){res.innerHTML='<div class="sr-empty">輸入關鍵詞開始查詢（支援繁簡體）</div>';return}
 
   const data=await loadData();
-  if(!data.length){res.innerHTML='<div class="sr-empty">暫無數據</div>';return}
+  if(!data.length){res.innerHTML='<div class="sr-empty">暫無數據，請先由後台導入</div>';return}
 
-  // 姓名匹配
+  const qNorm=normHan(q);
+  function matches(s){
+    if(!s) return false;
+    if(matchHan(s,q)) return true;
+    if(matchHan(normHan(s),qNorm)) return true;
+    if(matchHan(normHan(s),q)) return true;
+    if(matchHan(s,qNorm)) return true;
+    return false;
+  }
+
   const nameMap=new Map();
   const projMap=new Map();
   data.forEach(d=>{
     const nm=d.name;
-    if(nm.toLowerCase().includes(q)){
+    if(matches(nm)){
       if(!nameMap.has(nm)) nameMap.set(nm,{name:nm,count:0});
       nameMap.get(nm).count++;
     }
     const pj=d.project||'';
     const pjName=fmtProject(pj);
-    if(pj.toLowerCase().includes(q)||pjName.toLowerCase().includes(q)){
+    if(matches(pj)||matches(pjName)){
       if(!projMap.has(pj)) projMap.set(pj,{project:pj,count:0,displayName:pjName});
       projMap.get(pj).count++;
     }
@@ -444,7 +476,7 @@ async function _doSearch(){
   for(const v of projMap.values()) items.push({type:'project',label:v.displayName||v.project,count:v.count,key:v.project});
   items.sort((a,b)=>b.count-a.count);
 
-  if(!items.length){res.innerHTML='<div class="sr-empty">無匹配結果</div>';return}
+  if(!items.length){res.innerHTML='<div class="sr-empty">無匹配結果<br><small style="font-size:0.8em">試試其他關鍵詞</small></div>';return}
 
   res.innerHTML=items.map((item,i)=>{
     const typeLabel=item.type==='name'?'捐贈人':'樂捐項目';
