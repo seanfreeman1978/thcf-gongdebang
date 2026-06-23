@@ -240,24 +240,22 @@ td .act-group{display:flex;gap:4px;justify-content:center}
 <script>
 const ADMIN_PASSWORD='Thxcf@2026';
 const STORAGE_KEY='gongdebang_donations';
+const DB_NAME='gongdebang_db';
+const STORE_NAME='donations';
 const PAGE_SIZE=15;
-let currentPage=1,parsedData=null;
+let currentPage=1,parsedData=null,_db=null;
 
-function loadData(){try{const d=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];let changed=false;const ts=Date.now();d.forEach((r,i)=>{if(!r._id||!Number.isInteger(r._id)){r._id=ts+i;changed=true}});if(changed){console.log('_id修復:',d.length,'條');localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}return d}catch(e){console.error('loadData error:',e);return[]}}
-function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}
+// ===== IndexedDB 存储层 =====
+function openDB(){return new Promise((resolve,reject)=>{if(_db){resolve(_db);return}const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME,{keyPath:'_id'})};req.onsuccess=e=>{_db=e.target.result;resolve(_db)};req.onerror=e=>reject(e.target.error)})}
+
+async function migrateFromLS(){try{const old=localStorage.getItem(STORAGE_KEY);if(!old)return;const data=JSON.parse(old);if(!Array.isArray(data)||!data.length)return;const existing=await loadData();if(existing.length>0)return;await saveData(data);localStorage.removeItem(STORAGE_KEY);console.log('已迁移',data.length,'条到IndexedDB')}catch(e){console.error('迁移失败:',e)}}
+
+async function loadData(){try{const db=await openDB();return new Promise(resolve=>{const tx=db.transaction(STORE_NAME,'readonly');const req=tx.objectStore(STORE_NAME).getAll();req.onsuccess=()=>{const d=req.result||[];let changed=false;const ts=Date.now();d.forEach((r,i)=>{if(!r._id||!Number.isInteger(r._id)){r._id=ts+i;changed=true}});if(changed)saveData(d);resolve(d)};req.onerror=()=>resolve([])})}catch(e){console.error('loadData:',e);return[]}}
+
+async function saveData(data){try{const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE_NAME,'readwrite');const store=tx.objectStore(STORE_NAME);const cr=store.clear();cr.onsuccess=()=>{if(!data.length){resolve();return}let done=0;data.forEach(d=>{const r=store.add(d);r.onsuccess=()=>{done++;if(done===data.length)resolve()};r.onerror=e=>reject(e.target.error)})};cr.onerror=e=>reject(e.target.error)})}catch(e){console.error('saveData:',e);throw e}}
 
 // 登录
-document.getElementById('loginBtn').addEventListener('click',()=>{
-  if(document.getElementById('pwdInput').value===ADMIN_PASSWORD){
-    document.getElementById('loginPage').style.display='none';
-    document.getElementById('adminPage').style.display='block';
-    renderTable();
-  }else{
-    document.getElementById('loginError').style.display='block';
-    setTimeout(()=>{document.getElementById('loginError').style.display='none'},2500);
-  }
-});
-document.getElementById('pwdInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()});
+document.getElementById('loginBtn').addEventListener('click',()=>{if(document.getElementById('pwdInput').value===ADMIN_PASSWORD){document.getElementById('loginPage').style.display='none';document.getElementById('adminPage').style.display='block';migrateFromLS().then(()=>renderTable())}else{document.getElementById('loginError').style.display='block';setTimeout(()=>{document.getElementById('loginError').style.display='none'},2500)}});
 
 function logout(){
   document.getElementById('adminPage').style.display='none';
@@ -268,8 +266,8 @@ function logout(){
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 // 表格渲染
-function renderTable(){
-  let data=loadData();
+async function renderTable(){
+  let data=await loadData();
   const search=document.getElementById('searchInput').value.trim().toLowerCase();
   const catFilter=document.getElementById('filterCat').value;
   if(search) data=data.filter(d=>d.name.toLowerCase().includes(search));
@@ -278,7 +276,8 @@ function renderTable(){
   const total=data.length,tp=Math.ceil(total/PAGE_SIZE)||1;
   if(currentPage>tp) currentPage=tp;
   const start=(currentPage-1)*PAGE_SIZE,pg=data.slice(start,start+PAGE_SIZE);
-  document.getElementById('totalStats').textContent=`共 ${loadData().length} 條記錄`;
+  const allData=await loadData();
+  document.getElementById('totalStats').textContent=`共 ${allData.length} 條記錄`;
   document.getElementById('filteredStats').textContent=search||catFilter?`篩選：${total} 條`:'';
 
   const tbody=document.getElementById('tableBody');
@@ -343,8 +342,8 @@ function openAddModal(){
   document.getElementById('editDate').value=new Date().toISOString().split('T')[0];
   document.getElementById('editModal').classList.add('show');
 }
-function openEditModal(_id){
-  const data=loadData();const d=data.find(r=>String(r._id)===String(_id));if(!d)return;
+async function openEditModal(_id){
+  const data=await loadData();const d=data.find(r=>String(r._id)===String(_id));if(!d)return;
   document.getElementById('editTitle').textContent='編輯捐款記錄';
   document.getElementById('editId').value=d._id;
   document.getElementById('editName').value=d.name;
@@ -357,7 +356,7 @@ function openEditModal(_id){
 }
 function closeEditModal(){document.getElementById('editModal').classList.remove('show')}
 
-function saveRecord(){
+async function saveRecord(){
   const _id=document.getElementById('editId').value;
   const name=document.getElementById('editName').value.trim();
   const title=document.getElementById('editTitle_input').value.trim();
@@ -370,31 +369,31 @@ function saveRecord(){
   const cm={急:'急難救助',敬:'敬老撫孤',宗:'宗親文化',傳:'傳醫康養',助:'助學興教',立:'立基弘善'};
   const category=cm[p1]||project;
   const rec={_id:_id||Date.now(),name,title,type,amount,category,project,date};
-  const data=loadData();
+  const data=await loadData();
   const idx=data.findIndex(r=>String(r._id)===String(_id));
   if(idx>=0) data[idx]=rec; else data.push(rec);
-  saveData(data);closeEditModal();renderTable();
+  await saveData(data);closeEditModal();renderTable();
 }
 
-function deleteRecord(_id){
+async function deleteRecord(_id){
   if(!confirm('確定刪除此記錄？'))return;
-  const data=loadData();
+  const data=await loadData();
   const ids=data.map(r=>String(r._id));
   const sid=String(_id);
   const idx=ids.indexOf(sid);
-  if(idx<0){alert('找不到記錄！\n查找ID: '+sid+'\n現有ID: '+ids.slice(0,5).join(',')+(ids.length>5?'...':''));return}
-  data.splice(idx,1);saveData(data);renderTable();
+  if(idx<0){alert('找不到記錄！');return}
+  data.splice(idx,1);await saveData(data);renderTable();
 }
-function batchDelete(){
+async function batchDelete(){
   const cbs=[...document.querySelectorAll('.row-cb:checked')];
   if(!cbs.length){alert('請先勾選記錄');return}
   if(!confirm(`確定刪除 ${cbs.length} 條記錄？`))return;
-  const data=loadData();
+  const data=await loadData();
   const ids=cbs.map(c=>c.dataset.id);
   let del=0;
   ids.forEach(id=>{const i=data.findIndex(r=>String(r._id)===String(id));if(i>=0){data.splice(i,1);del++}});
   if(del===0){alert('未找到任何匹配記錄');return}
-  saveData(data);
+  await saveData(data);
   document.getElementById('selectAll').checked=false;
   renderTable();
 }
@@ -470,22 +469,19 @@ function handleFile(e){
   reader.readAsArrayBuffer(file);
 }
 
-function confirmUpload(){
+async function confirmUpload(){
   try{
-    if(!parsedData||!parsedData.length){
-      alert('沒有可導入的數據，請先上傳並解析 Excel 文件');
-      return;
-    }
+    if(!parsedData||!parsedData.length){alert('沒有可導入的數據');return}
     const modeEl=document.querySelector('input[name="uploadMode"]:checked');
     if(!modeEl){alert('請選擇導入模式');return}
     const mode=modeEl.value;
     if(mode==='overwrite'){
-      saveData(parsedData);
+      await saveData(parsedData);
       alert('已覆蓋全部數據，共 '+parsedData.length+' 條記錄');
     }else{
-      const data=loadData();
+      const data=await loadData();
       data.push(...parsedData);
-      saveData(data);
+      await saveData(data);
       alert('已追加 '+parsedData.length+' 條記錄，共 '+data.length+' 條');
     }
     closeUploadModal();renderTable();
@@ -495,13 +491,25 @@ function confirmUpload(){
   }
 }
 
-// 用 addEventListener 绑定，比 onclick 更可靠
+// 用 addEventListener 绑定
 document.addEventListener('DOMContentLoaded',()=>{
   const btn=document.getElementById('confirmUploadBtn');
   if(btn) btn.addEventListener('click', confirmUpload);
 });
 
-renderTable();
+// 初始加载
+(async function(){
+  await migrateFromLS();
+  const data=await loadData();
+  if(data.length===0){
+    await saveData([
+      {_id:1,name:"陳氏宗親總會",title:"理事長",amount:128000,type:"善款",project:"立基弘善/奠基典禮",category:"立基弘善",date:"2024-03-15"},
+      {_id:2,name:"李　明輝",title:"居士",amount:88000,type:"善款",project:"急難救助",category:"急難救助",date:"2024-05-20"},
+      {_id:3,name:"黃淑芬",title:"夫人",amount:66000,type:"善款",project:"助學興教/獎學金計劃",category:"助學興教",date:"2024-06-10"},
+    ]);
+  }
+  renderTable();
+})();
 </script>
 </body>
 </html>
