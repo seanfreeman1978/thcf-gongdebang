@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteRule ^admin/?$ admin.html [L]
+RewriteRule ^$ index.html [L]
+
+# 强制 HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

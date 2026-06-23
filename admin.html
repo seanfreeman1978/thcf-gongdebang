@@ -230,7 +230,7 @@ td .act-group{display:flex;gap:4px;justify-content:center}
       <label style="cursor:pointer;margin-left:12px"><input type="radio" name="uploadMode" value="overwrite"> 覆蓋全部</label>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-gold" id="confirmUploadBtn" onclick="confirmUpload()" disabled>確認導入</button>
+      <button class="btn btn-gold" id="confirmUploadBtn" disabled>確認導入</button>
       <button class="btn btn-outline" onclick="closeUploadModal()">取消</button>
     </div>
   </div>
@@ -471,19 +471,35 @@ function handleFile(e){
 }
 
 function confirmUpload(){
-  if(!parsedData||!parsedData.length) return;
-  const mode=document.querySelector('input[name="uploadMode"]:checked').value;
-  if(mode==='overwrite'){
-    saveData(parsedData);
-    alert('已覆蓋全部數據，共 '+parsedData.length+' 條記錄');
-  }else{
-    const data=loadData();
-    data.push(...parsedData);
-    saveData(data);
-    alert('已追加 '+parsedData.length+' 條記錄，共 '+data.length+' 條');
+  try{
+    if(!parsedData||!parsedData.length){
+      alert('沒有可導入的數據，請先上傳並解析 Excel 文件');
+      return;
+    }
+    const modeEl=document.querySelector('input[name="uploadMode"]:checked');
+    if(!modeEl){alert('請選擇導入模式');return}
+    const mode=modeEl.value;
+    if(mode==='overwrite'){
+      saveData(parsedData);
+      alert('已覆蓋全部數據，共 '+parsedData.length+' 條記錄');
+    }else{
+      const data=loadData();
+      data.push(...parsedData);
+      saveData(data);
+      alert('已追加 '+parsedData.length+' 條記錄，共 '+data.length+' 條');
+    }
+    closeUploadModal();renderTable();
+  }catch(err){
+    alert('導入失敗：'+err.message);
+    console.error('confirmUpload error:', err);
   }
-  closeUploadModal();renderTable();
 }
+
+// 用 addEventListener 绑定，比 onclick 更可靠
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('confirmUploadBtn');
+  if(btn) btn.addEventListener('click', confirmUpload);
+});
 
 renderTable();
 </script>
