@@ -628,7 +628,8 @@ backToAll=function(){
   if(!cvs) return;
   var ctx=cvs.getContext('2d');
   var W,H,lines=[];
-  var basePositions=[0.42,0.50,0.58]; // 三炷香
+  var basePositions=[0.50]; // 一炷香
+  var speedMul=0.3; // 速度×0.3
 
   function resize(){
     var rect=cvs.parentElement.getBoundingClientRect();
@@ -643,9 +644,9 @@ backToAll=function(){
   // 每帧生成若干条烟线
   var spawnTimer=0;
   function spawn(){
-    var pos=basePositions[Math.floor(Math.random()*3)];
+    var pos=basePositions[0];
     var x=W*pos+(Math.random()-.5)*W*0.02;
-    var life=4+Math.random()*5; // 秒
+    var life=(4+Math.random()*5)/speedMul; // 秒
     lines.push({
       x:x, y:H, life:life, maxLife:life,
       vx:(Math.random()-.5)*W*0.003, // 轻微横向飘动
@@ -659,7 +660,7 @@ backToAll=function(){
     var dt=Math.min(0.05,ts?(ts-(draw._last||ts))/1000:0.016);
     draw._last=ts;
 
-    spawnTimer+=dt;
+    spawnTimer+=dt*speedMul;
     // 每 0.08~0.15 秒生成一条
     while(spawnTimer>0.08+Math.random()*0.07){spawn();spawnTimer-=0.08+Math.random()*0.07}
     if(lines.length>80) lines.splice(0,lines.length-80);
