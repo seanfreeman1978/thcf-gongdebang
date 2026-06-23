@@ -662,8 +662,8 @@ backToAll=function(){
 
     spawnTimer+=dt*speedMul;
     // 每 0.08~0.15 秒生成一条
-    while(spawnTimer>0.08+Math.random()*0.07){spawn();spawnTimer-=0.08+Math.random()*0.07}
-    if(lines.length>80) lines.splice(0,lines.length-80);
+    while(spawnTimer>0.13+Math.random()*0.12){spawn();spawnTimer-=0.13+Math.random()*0.12}
+    if(lines.length>48) lines.splice(0,lines.length-48);
 
     for(var i=lines.length-1;i>=0;i--){
       var l=lines[i];
