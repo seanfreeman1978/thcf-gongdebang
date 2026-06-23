@@ -34,7 +34,7 @@ body{margin:0;background:#1a1208;font-family:'KaiTi','STKaiti','DFKai-SB','標�
 .query-btn{z-index:61;left:clamp(15px,2.2%,23px);top:24%;width:clamp(32px,5.5vw,44px);height:clamp(32px,5.5vw,44px);border-radius:50%;background:rgba(100,75,35,.45);border:2px solid rgba(180,150,80,.5);color:#d4c080;font-size:clamp(18px,3vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-weight:900;line-height:1}
 .query-btn:hover{background:rgba(160,120,50,.6);border-color:rgba(220,190,90,.7);color:#ffe8a0;box-shadow:0 0 14px rgba(200,160,50,.5);transform:scale(1.1)}
 /* 查询弹窗 — 白色毛玻璃 */
-.search-overlay{position:fixed;inset:0;z-index:900;background:rgba(255,252,245,.85);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;padding-top:clamp(60px,12vh,120px)}
+.search-overlay{position:fixed;inset:0;z-index:900;background:rgba(235,233,228,.72);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;padding-top:clamp(60px,12vh,120px)}
 .search-overlay.show{display:flex}
 .search-box{width:88%;max-width:520px;display:flex;flex-direction:column;gap:clamp(10px,2vh,16px)}
 .search-box .srch-input{width:100%;padding:clamp(12px,2vh,18px) 16px;border:2px solid #c8a860;border-radius:clamp(8px,1.5vw,14px);background:#fff;color:#3a3028;font-size:clamp(16px,2.5vw,22px);outline:none;font-family:'KaiTi','STKaiti','DFKai-SB','Noto Serif TC',serif;transition:.3s}
@@ -389,7 +389,7 @@ bgm.volume=0.25;
 let audOn=true;
 // 手机浏览器拦截autoplay → 首次触摸时恢复
 bgm.play().catch(()=>{
-  audOn=false; ab.textContent='✕';
+  audOn=false; ab.innerHTML='<span style="text-decoration:line-through">♫</span>';
   const resume=()=>{
     bgm.play().then(()=>{audOn=true;ab.textContent='♫'}).catch(()=>{});
 
@@ -400,7 +400,7 @@ bgm.play().catch(()=>{
   document.addEventListener('touchstart',resume,{once:true});
 });
 ab.addEventListener('click',()=>{
-  if(audOn){bgm.pause();ab.textContent='✕'}else{bgm.play().catch(()=>{});ab.textContent='♫'}
+  if(audOn){bgm.pause();ab.innerHTML='<span style="text-decoration:line-through">♫</span>'}else{bgm.play().catch(()=>{});ab.textContent='♫'}
   audOn=!audOn;
 });
 
@@ -517,7 +517,7 @@ async function showMultiResults(){
   
   track.innerHTML='';
   var h=document.createElement('div');h.className='entry';
-  h.innerHTML='<div style="text-align:center;font-size:clamp(15px,2.6vw,22px);color:#111;font-weight:900;padding:3px 0">◎ '+labels.join(' + ')+' <span style="font-size:0.7em;color:#999">('+allItems.length+'筆)</span></div>';
+  h.innerHTML='<div style="text-align:center;font-size:clamp(15px,2.6vw,22px);color:#111;font-weight:900;padding:3px 0">'+labels.join(' + ')+' <span style="font-size:0.7em;color:#999">('+allItems.length+'筆)</span></div>';
   track.appendChild(h);mask.style.height='18%';
   
   renderItems.forEach(function(d){
@@ -577,7 +577,7 @@ async function renderSearchResults(type,key,label){
   // 标题
   const h=document.createElement('div');
   h.className='entry';
-  h.innerHTML=`<div style="text-align:center;font-size:clamp(16px,2.8vw,24px);color:#111;font-weight:900;padding:3px 0">◎ ${esc(label)} <span style="font-size:0.7em;color:#999">(${items.length}筆)</span></div>`;
+  h.innerHTML=`<div style="text-align:center;font-size:clamp(16px,2.8vw,24px);color:#111;font-weight:900;padding:3px 0">${esc(label)} <span style="font-size:0.7em;color:#999">(${items.length}筆)</span></div>`;
   track.appendChild(h);
   mask.style.height='18%';
 
